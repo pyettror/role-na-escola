@@ -17,3 +17,11 @@ Envie `index.html`, `styles.css` e `script.js` para a raiz do repositório GitHu
 
 ## Observações
 Sem Supabase configurado, o site mostra dois eventos de demonstração, mas não salva alterações. Não há senha padrão. As capas são ilustrações de reserva, não fotos reais. Não foram inventadas datas. Confirme autorizações para publicar imagens de estudantes. Planos gratuitos têm limites e podem mudar; faça backups e mantenha as contas sob controle institucional. Este pacote precisa ser configurado e testado antes de ser considerado pronto para produção.
+
+
+## Alterações visuais
+- Botão de modo claro/escuro, com preferência salva no navegador.
+- Seção de próximo evento e cronograma; o site destaca o evento futuro mais próximo com data cadastrada.
+- Logo da escola no cabeçalho e no rodapé. O arquivo `logo-escola.png` deve permanecer na mesma pasta dos arquivos do site.
+
+A agenda mostra o horário inicial cadastrado. Horários detalhados adicionais ainda precisam ser adicionados ao sistema para montar um cronograma completo por etapas.
