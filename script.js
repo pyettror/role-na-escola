@@ -1,49 +1,130 @@
-// Configuração: preencha com Project URL e chave pública anon/publishable do Supabase.
-const SUPABASE_URL="", SUPABASE_ANON_KEY="", BUCKET="event-photos";
-const seed=[
-{id:"demo-ist",titulo:"Conversa sobre doenças sexualmente transmissíveis",descricao:"Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.",categoria:"Saúde e conscientização",data:null,horario_inicio:null,local:null,imagem_capa:"",estado:"publicado",destaque:false,fotografias:[],videos:[]},
-{id:"demo-vape",titulo:"Os malefícios do uso do cigarro eletrônico",descricao:"Registro de uma atividade educativa sobre os riscos associados ao uso de cigarros eletrônicos, seus possíveis impactos na saúde, a dependência de nicotina e a importância da prevenção e da conscientização entre os jovens.",categoria:"Saúde e conscientização",data:null,horario_inicio:null,local:null,imagem_capa:"",estado:"publicado",destaque:false,fotografias:[],videos:[]}];
-let db=null,events=[...seed];const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const url=s=>{try{let u=new URL(s);return ["https:","http:"].includes(u.protocol)?u.href:""}catch{return""}};
-const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
-const dateText=d=>d?`${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`:"Data não informada";
-function placeholder(t){return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420"><rect width="100%" height="100%" fill="#eaf2ff"/><text x="35" y="180" font-size="25" font-family="Arial" fill="#2563eb">ROLÊ NA ESCOLA</text><text x="35" y="230" font-size="20" font-family="Arial" fill="#123a72">${esc(t).slice(0,55)}</text></svg>`)}
-const cover=e=>url(e.imagem_capa)||placeholder(e.titulo),pub=()=>events.filter(e=>e.estado==="publicado");
-function featured(){let a=pub(),t=today(),same=a.filter(e=>e.data===t);if(same.length)return{e:same.find(e=>e.destaque)||same[0],label:"Acontecendo hoje"};let fut=a.filter(e=>e.data&&e.data>t).sort((x,y)=>x.data.localeCompare(y.data));if(fut.length)return{e:fut[0],label:"Próximo evento"};return a.length?{e:a.find(e=>e.destaque)||a.slice().sort((x,y)=>(y.data||"").localeCompare(x.data||""))[0],label:"Última cobertura"}:null}
-function card(e){return `<article class="card"><img class="cover" src="${cover(e)}" alt="" loading="lazy"><div class="cardBody"><span class="tag">${esc(e.categoria||"Geral")}</span><h3>${esc(e.titulo)}</h3><p>${esc((e.descricao||"").slice(0,130))}</p><p class="meta">${dateText(e.data)}</p><button class="btn" data-open="${esc(e.id)}">Ver cobertura</button></div></article>`}
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const todayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  };
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const formatDate = (date) => {
+    if (!date) return "Data a confirmar";
+    const [y,m,d] = date.split("-");
+    return `${d}/${m}/${y}`;
+  };
+  const monthName = (date) => date ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR",{month:"short"}).replace(".","") : "";
+  const photoPlaceholder = (title) => `<div class="featured-placeholder"><span>ROLÊ NA ESCOLA<br><br>${esc(title).slice(0,70)}</span></div>`;
+  const safeUrl = (value) => {
+    try { const u = new URL(value); return ["https:","http:"].includes(u.protocol) ? u.href : ""; }
+    catch { return ""; }
+  };
 
-// Tema claro/escuro: guarda a escolha neste navegador.
-function applyTheme(theme){
-  document.body.classList.toggle("dark", theme === "dark");
-  const b=$("themeToggle");
-  if(b){
-    b.innerHTML=theme==="dark"?'☀️ <span>Modo claro</span>':'🌙 <span>Modo escuro</span>';
-    b.setAttribute("aria-label",theme==="dark"?"Ativar modo claro":"Ativar modo escuro");
-    b.title=theme==="dark"?"Ativar modo claro":"Ativar modo escuro";
+  // Eventos demonstrativos. As datas ficam vazias até serem confirmadas pela equipe.
+  // Para inserir cronogramas reais, inclua itens em "cronograma" com horário e atividade.
+  const demoEvents = [
+    {
+      id:"demo-ist", titulo:"Conversa sobre doenças sexualmente transmissíveis",
+      descricao:"Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.",
+      categoria:"Saúde e conscientização", data:null, horario_inicio:null, local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa:"", estado:"publicado", destaque:true, cronograma:[], fotografias:[]
+    },
+    {
+      id:"demo-vape", titulo:"Os malefícios do uso do cigarro eletrônico",
+      descricao:"Registro de uma atividade educativa sobre os riscos associados ao uso de cigarros eletrônicos, seus possíveis impactos na saúde, a dependência de nicotina e a importância da prevenção e da conscientização entre os jovens.",
+      categoria:"Saúde e conscientização", data:null, horario_inicio:null, local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa:"", estado:"publicado", destaque:false, cronograma:[], fotografias:[]
+    }
+  ];
+  let events = [...demoEvents];
+
+  function coverMarkup(event, featured=false) {
+    const url = safeUrl(event.imagem_capa);
+    if (url) return `<img src="${esc(url)}" alt="Imagem de ${esc(event.titulo)}" loading="lazy">`;
+    return photoPlaceholder(event.titulo);
   }
-}
-const savedTheme=(()=>{try{return localStorage.getItem("role-escola-theme")}catch{return null}})();
-applyTheme(savedTheme==="dark"?"dark":"light");
-$("themeToggle").addEventListener("click",()=>{
-  const next=document.body.classList.contains("dark")?"light":"dark";
-  applyTheme(next);
-  try{localStorage.setItem("role-escola-theme",next)}catch{}
-});
-
-function render(){let f=featured();$("featured").innerHTML=f?`<article class="featured"><img src="${cover(f.e)}" alt=""><div><span class="tag">${f.label}</span><h3>${esc(f.e.titulo)}</h3><p>${esc(f.e.descricao)}</p><p class="meta">${dateText(f.e.data)}</p><button class="btn" data-open="${esc(f.e.id)}">Ver cobertura</button></div></article>`:"<p>Ainda não há eventos publicados.</p>";
-let old=$("year").value,years=[...new Set(pub().map(e=>e.data?.slice(0,4)).filter(Boolean))].sort().reverse();$("year").innerHTML='<option value="todos">Todos os anos</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join("");if(years.includes(old))$("year").value=old;let y=$("year").value,filtered=pub().filter(e=>y==="todos"||(e.data||"").startsWith(y));$("events").innerHTML=filtered.length?filtered.map(card).join(""):"<p>Nenhum evento encontrado para este filtro.</p>";let future=pub().filter(e=>e.data&&e.data>=today()).sort((a,b)=>a.data.localeCompare(b.data)||(a.horario_inicio||"").localeCompare(b.horario_inicio||""));let next=future[0];$("nextEvent").innerHTML=next?`<article class="nextEventCard"><div><span class="tag">${next.data===today()?"Acontecendo hoje":"Próximo evento"}</span><h3>${esc(next.titulo)}</h3><p>${esc(next.descricao||"Confira as informações deste evento escolar.")}</p><div class="nextEventDetails"><span>📅 ${dateText(next.data)}</span><span>🕒 ${esc(next.horario_inicio||"Horário a confirmar")}</span><span>📍 ${esc(next.local||"Local a confirmar")}</span></div><button class="btn" data-open="${esc(next.id)}">Ver detalhes</button></div><aside class="nextEventSide"><div class="timelineTitle">Cronograma divulgado</div><ol class="timeline"><li><b>${esc(next.horario_inicio||"Horário a confirmar")}</b><br>${esc(next.titulo)}</li><li><b>Outros horários</b><br>Serão exibidos quando forem informados pela equipe.</li></ol></aside></article>`:"<div class=\"emptyNext\">Ainda não há próximo evento com data cadastrada. Quando a equipe publicar um evento com data e horário, ele aparecerá aqui.</div>";$("agendaList").innerHTML=future.length>1?'<h3>Outros eventos programados</h3>'+future.slice(1).map(e=>`<article class="agendaItem"><b>${dateText(e.data)}</b><div><h3>${esc(e.titulo)}</h3><p>${esc(e.horario_inicio||"Horário não informado")}${e.local?" · "+esc(e.local):""}</p></div><button class="btn" data-open="${esc(e.id)}">Ver evento</button></article>`).join(""):"";renderAdmin()}
-function openEvent(id){let e=events.find(x=>String(x.id)===String(id));if(!e)return;let photos=e.fotografias||[];$("eventContent").innerHTML=`<span class="tag">${esc(e.categoria||"Geral")}</span><h2>${esc(e.titulo)}</h2><p class="meta">${dateText(e.data)}${e.local?" · "+esc(e.local):""}</p><img class="cover" src="${cover(e)}" alt=""><p>${esc(e.descricao)}</p><h3>Fotografias</h3>${photos.length?photos.map(p=>`<a href="${url(p.url)||"#"}" target="_blank" rel="noopener"><img class="cover" style="width:30%;height:130px;display:inline-block" src="${url(p.url)||placeholder("Foto")}" alt="${esc(p.alt||e.titulo)}"></a>`).join(""):"<p>Nenhuma fotografia adicionada ainda.</p>"}`;$("eventDialog").showModal()}
-function renderAdmin(){if(!db){$("adminEvents").innerHTML="<p>Configure o Supabase conforme o README para ativar o painel real.</p>";return}$("adminEvents").innerHTML=events.map(e=>`<div class="adminRow"><div><b>${esc(e.titulo)}</b><br><small>${e.estado==="publicado"?"Publicado":"Rascunho"} · ${dateText(e.data)}</small></div><div><button class="mini" data-edit="${esc(e.id)}">Editar</button> <button class="mini" data-delete="${esc(e.id)}">Excluir</button></div></div>`).join("");$("photoEvent").innerHTML=events.map(e=>`<option value="${esc(e.id)}">${esc(e.titulo)}</option>`).join("")}
-async function load(){if(!db){events=[...seed];render();return}let {data,error}=await db.from("eventos").select("*, fotografias(*), videos(*)").order("criado_em",{ascending:false});if(error){console.error(error);alert("Erro ao ler banco. Confira configuração.");events=[...seed]}else events=data||[];render()}
-function reset(){ $("eventForm").reset();$("editId").value="";$("category").value="Saúde e conscientização";$("published").checked=true;$("eventMsg").textContent=""}
-$("year").addEventListener("change",render);$("menuBtn").addEventListener("click",()=>$("nav").classList.toggle("open"));
-$("loginBtn").addEventListener("click",async()=>{if(db){let {data}=await db.auth.getSession();if(data.session){$("adminDialog").showModal();await load();return}}$("loginDialog").showModal()});
-document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).close());
-document.addEventListener("click",async e=>{let b=e.target.closest("[data-open]");if(b)openEvent(b.dataset.open);let edit=e.target.closest("[data-edit]");if(edit){let x=events.find(v=>String(v.id)===edit.dataset.edit);$("editId").value=x.id;$("title").value=x.titulo;$("description").value=x.descricao;$("category").value=x.categoria||"Geral";$("date").value=x.data||"";$("time").value=x.horario_inicio||"";$("location").value=x.local||"";$("cover").value=x.imagem_capa||"";$("published").checked=x.estado==="publicado";$("featuredCheck").checked=!!x.destaque}let del=e.target.closest("[data-delete]");if(del&&db&&confirm("Excluir este evento?")){let {error}=await db.from("eventos").delete().eq("id",del.dataset.delete);if(error)alert("Não foi possível excluir; confira as permissões.");else await load()}});
-$("loginForm").onsubmit=async e=>{e.preventDefault();if(!db){$("loginMsg").textContent="O painel ainda não foi configurado. Siga o README.";return}let {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){$("loginMsg").textContent="Não foi possível entrar. Confira dados e autorização.";return}$("loginDialog").close();$("adminDialog").showModal();await load()};
-$("logoutBtn").onclick=async()=>{if(db)await db.auth.signOut();$("adminDialog").close()};
-$("clearForm").onclick=reset;
-$("eventForm").onsubmit=async e=>{e.preventDefault();if(!db){$("eventMsg").textContent="Configure o Supabase primeiro.";return}let id=$("editId").value,p={titulo:$("title").value.trim(),descricao:$("description").value.trim(),categoria:$("category").value.trim()||"Geral",data:$("date").value||null,horario_inicio:$("time").value||null,local:$("location").value.trim()||null,imagem_capa:url($("cover").value)||null,estado:$("published").checked?"publicado":"rascunho",destaque:$("featuredCheck").checked};let r=id?await db.from("eventos").update(p).eq("id",id):await db.from("eventos").insert(p);if(r.error){$("eventMsg").textContent="Erro ao salvar. Confira as permissões.";return}reset();await load();$("eventMsg").textContent="Evento salvo."};
-$("uploadBtn").onclick=async()=>{if(!db){$("photoMsg").textContent="Configure o Supabase primeiro.";return}let id=$("photoEvent").value,files=[...$("photoFiles").files];if(!id||!files.length){$("photoMsg").textContent="Selecione evento e fotografias.";return}if(files.some(f=>!["image/jpeg","image/png","image/webp"].includes(f.type)||f.size>5*1024*1024)){$("photoMsg").textContent="Use JPG, PNG ou WebP de até 5 MB.";return}for(let f of files){let path=`${id}/${crypto.randomUUID()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`,up=await db.storage.from(BUCKET).upload(path,f,{contentType:f.type});if(up.error){$("photoMsg").textContent="Falha no upload. Confira bucket e permissões.";return}let imageUrl=db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;let ins=await db.from("fotografias").insert({evento_id:id,url:imageUrl,alt:f.name});if(ins.error){$("photoMsg").textContent="Imagem enviada, mas não vinculada ao evento.";return}}$("photoFiles").value="";$("photoMsg").textContent="Fotografias enviadas.";await load()};
-if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase)db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);load();
+  function publicEvents() { return events.filter(e => e.estado === "publicado"); }
+  function selectFeatured() {
+    const list = publicEvents(), today = todayISO();
+    const todays = list.filter(e => e.data === today);
+    if (todays.length) return {event: todays.find(e => e.destaque) || todays[0], label:"Acontecendo hoje"};
+    const upcoming = list.filter(e => e.data && e.data > today).sort((a,b) => a.data.localeCompare(b.data));
+    if (upcoming.length) return {event:upcoming[0],label:"Próximo evento"};
+    const dated = list.filter(e => e.data).sort((a,b) => b.data.localeCompare(a.data));
+    return {event:list.find(e=>e.destaque) || dated[0] || list[0],label:"Registro em destaque"};
+  }
+  function renderFeatured() {
+    const selected = selectFeatured();
+    if (!selected) { $("featuredEvent").innerHTML = `<div class="empty-state">Ainda não há eventos publicados.</div>`; return; }
+    const e = selected.event;
+    $("featuredEvent").innerHTML = `<article class="featured-card"><div class="featured-art">${coverMarkup(e,true)}</div><div class="featured-content"><span class="pill">${esc(selected.label)}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao)}</p><div class="meta-row"><span>◷ ${formatDate(e.data)}</span><span>⌖ ${esc(e.local || "Local a confirmar")}</span></div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver cobertura <span>→</span></button></div></article>`;
+  }
+  function renderAgenda() {
+    const today = todayISO();
+    const upcoming = publicEvents().filter(e=>e.data && e.data >= today).sort((a,b)=>a.data.localeCompare(b.data) || (a.horario_inicio||"").localeCompare(b.horario_inicio||""));
+    if (!upcoming.length) {
+      $("nextEvent").innerHTML = `<div class="empty-state"><strong>Nenhum evento futuro cadastrado ainda.</strong><br>Quando a equipe confirmar uma data, o próximo evento e o cronograma aparecerão automaticamente aqui.</div>`;
+      $("otherUpcoming").innerHTML = "";
+      return;
+    }
+    const e = upcoming[0];
+    const agenda = Array.isArray(e.cronograma) ? e.cronograma : [];
+    const timeline = agenda.length
+      ? agenda.slice().sort((a,b)=>(a.horario||"").localeCompare(b.horario||"")).map(item=>`<li><time>${esc(item.horario || "Horário a confirmar")}</time><p>${esc(item.atividade || "Atividade a confirmar")}</p></li>`).join("")
+      : `<li><time>${esc(e.horario_inicio || "Horário a confirmar")}</time><p>${esc(e.titulo)}</p></li><li><time>Mais horários</time><p>O restante do cronograma será exibido quando for cadastrado.</p></li>`;
+    $("nextEvent").innerHTML = `<article class="next-event-card"><div class="next-main"><span class="pill">${e.data===today ? "Acontecendo hoje" : "Próximo compromisso"}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao)}</p><div class="event-facts"><span class="fact">▣ ${formatDate(e.data)}</span><span class="fact">◷ ${esc(e.horario_inicio || "Horário a confirmar")}</span><span class="fact">⌖ ${esc(e.local || "Local a confirmar")}</span></div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver detalhes <span>→</span></button></div><aside class="timeline-panel"><h4>⌁ Cronograma do evento</h4><ol class="timeline">${timeline}</ol></aside></article>`;
+    $("otherUpcoming").innerHTML = upcoming.slice(1).map(item=>`<article class="upcoming-row"><div class="date-box"><strong>${item.data.slice(8,10)}</strong><span>${monthName(item.data)}</span></div><div><h4>${esc(item.titulo)}</h4><p>${formatDate(item.data)} · ${esc(item.horario_inicio || "Horário a confirmar")}</p></div></article>`).join("");
+  }
+  function renderGallery() {
+    const previous = $("yearFilter").value;
+    const years = [...new Set(publicEvents().map(e=>e.data ? e.data.slice(0,4) : null).filter(Boolean))].sort().reverse();
+    $("yearFilter").innerHTML = `<option value="todos">Todos os anos</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join("");
+    $("yearFilter").value = years.includes(previous) ? previous : "todos";
+    const chosen = $("yearFilter").value;
+    const list = publicEvents().filter(e=>chosen==="todos" || (e.data||"").startsWith(chosen));
+    $("eventGrid").innerHTML = list.length ? list.map(e=>`<article class="event-card"><div class="event-art">${coverMarkup(e)}</div><div class="event-body"><span class="pill">${esc(e.categoria || "Evento escolar")}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao.length>125 ? e.descricao.slice(0,125)+"…" : e.descricao)}</p><div class="event-date">▣ ${formatDate(e.data)}</div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver cobertura <span>→</span></button></div></article>`).join("") : `<div class="empty-state">Nenhum evento encontrado para este filtro.</div>`;
+  }
+  function openEvent(id) {
+    const e = events.find(item=>String(item.id)===String(id));
+    if (!e) return;
+    const photos = Array.isArray(e.fotografias) ? e.fotografias : [];
+    const photoHtml = photos.length ? `<div class="modal-photos">${photos.map(p=>{const u=safeUrl(p.url);return u?`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="${esc(p.alt||e.titulo)}" loading="lazy"></a>`:"";}).join("")}</div>` : `<p>As fotografias deste evento serão adicionadas pela equipe.</p>`;
+    const timeline = Array.isArray(e.cronograma) && e.cronograma.length ? `<h3>Cronograma</h3><ol class="timeline">${e.cronograma.map(x=>`<li><time>${esc(x.horario||"A confirmar")}</time><p>${esc(x.atividade||"Atividade")}</p></li>`).join("")}</ol>` : "";
+    $("eventDetails").innerHTML = `<span class="pill">${esc(e.categoria||"Evento escolar")}</span><h2>${esc(e.titulo)}</h2><p>▣ ${formatDate(e.data)}　⌖ ${esc(e.local||"Local a confirmar")}</p>${safeUrl(e.imagem_capa)?`<img class="modal-cover" src="${esc(safeUrl(e.imagem_capa))}" alt="${esc(e.titulo)}">`:""}<p>${esc(e.descricao)}</p>${timeline}<h3>Álbum fotográfico</h3>${photoHtml}`;
+    $("eventDialog").showModal();
+  }
+  function setTheme(theme) {
+    const dark = theme === "dark";
+    document.body.classList.toggle("dark", dark);
+    $("themeIcon").textContent = dark ? "☀" : "☾";
+    $("themeLabel").textContent = dark ? "Modo claro" : "Modo escuro";
+    $("themeToggle").setAttribute("aria-label", dark ? "Ativar modo claro" : "Ativar modo escuro");
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#0b1220" : "#174ea6");
+  }
+  let initialTheme = "light";
+  try { initialTheme = localStorage.getItem("role-na-escola-theme") || "light"; } catch {}
+  setTheme(initialTheme === "dark" ? "dark" : "light");
+  $("themeToggle").addEventListener("click", () => {
+    const next = document.body.classList.contains("dark") ? "light" : "dark";
+    setTheme(next);
+    try { localStorage.setItem("role-na-escola-theme", next); } catch {}
+  });
+  $("yearFilter").addEventListener("change", renderGallery);
+  $("menuToggle").addEventListener("click", () => {
+    const nav = $("mainNav"), open = nav.classList.toggle("open");
+    $("menuToggle").setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", event => {
+    const opener = event.target.closest("[data-open-event]");
+    if (opener) openEvent(opener.dataset.openEvent);
+    const closer = event.target.closest("[data-close]");
+    if (closer) $(closer.dataset.close).close();
+    if (event.target.id === "teamLogin" || event.target.id === "footerLogin") $("loginDialog").showModal();
+    if (event.target.closest("#mainNav a")) {
+      $("mainNav").classList.remove("open");
+      $("menuToggle").setAttribute("aria-expanded","false");
+    }
+  });
+  // Exibe a demonstração até que a equipe configure a conexão real com o banco.
+  renderFeatured();
+  renderAgenda();
+  renderGallery();
+})();

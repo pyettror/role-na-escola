@@ -1,27 +1,36 @@
-# Rolê na Escola — pacote inicial
+# Rolê na Escola — pacote refeito
 
-Arquivos: `index.html` (interface), `styles.css` (layout), `script.js` (galeria/agenda/painel), `supabase-schema.sql` (banco, permissões e armazenamento).
+Este pacote substitui os arquivos públicos do site por uma interface refeita, responsiva e em português.
 
-## Publicar a parte visual
-Envie `index.html`, `styles.css` e `script.js` para a raiz do repositório GitHub. Em Settings > Pages, escolha Deploy from a branch, a branch principal (pode estar traduzida como `principal`) e a pasta `/(root)`. O GitHub Pages publica apenas a parte estática; login, banco e upload precisam do Supabase configurado.
+## Arquivos
+- `index.html` — estrutura do site.
+- `styles.css` — layout, cores, modo claro/escuro e responsividade.
+- `script.js` — galeria, filtro por ano, destaque, próximo evento, cronograma demonstrativo e detalhes dos eventos.
+- `logo-escola.png` — logo enviada para uso no cabeçalho, área de apresentação e rodapé.
+- `supabase-schema.sql` — referência inicial para criar as tabelas de conteúdo no Supabase.
 
-## Ativar banco e painel real
-1. Crie um projeto Supabase.
-2. Abra SQL Editor e execute todo o `supabase-schema.sql`.
-3. Em configurações/API do Supabase, copie a Project URL e a chave pública `anon`/`publishable`.
-4. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` no início de `script.js`, salve e envie ao GitHub. Nunca use a chave `service_role` nem qualquer segredo no front-end.
-5. Em Authentication > Users, crie um usuário com e-mail e senha.
-6. Copie o UUID desse usuário e execute no SQL Editor, substituindo o texto de exemplo: `insert into public.admins(user_id) values ('UUID_DO_USUARIO') on conflict do nothing;`
-7. Entre no site pelo botão “Painel da equipe”. Apenas usuários autorizados na tabela `admins` podem administrar conteúdo.
-8. No painel, escolha um evento e envie fotos JPG/PNG/WebP de até 5 MB.
+## Como atualizar no GitHub Pages
+1. Extraia o arquivo ZIP.
+2. Abra o repositório `role-na-escola`.
+3. Use **Add file → Upload files**.
+4. Envie os cinco arquivos desta pasta (incluindo `logo-escola.png`).
+5. Confirme em **Commit changes**.
+6. Abra o endereço publicado e pressione `Ctrl + F5`.
 
-## Observações
-Sem Supabase configurado, o site mostra dois eventos de demonstração, mas não salva alterações. Não há senha padrão. As capas são ilustrações de reserva, não fotos reais. Não foram inventadas datas. Confirme autorizações para publicar imagens de estudantes. Planos gratuitos têm limites e podem mudar; faça backups e mantenha as contas sob controle institucional. Este pacote precisa ser configurado e testado antes de ser considerado pronto para produção.
+Se o repositório já contém `index.html`, `styles.css`, `script.js` e `README.md`, confirme que o GitHub realmente mostrou o envio dos arquivos novos e que a alteração foi registrada no histórico de commits.
 
+## O que funciona nesta versão
+- Layout responsivo para celular e computador.
+- Alternância entre modo claro e escuro, com preferência salva no navegador.
+- Logo da escola no cabeçalho, apresentação e rodapé.
+- Galeria de eventos e filtro por ano.
+- Destaque de um evento.
+- Seção de próximo evento e espaço para cronograma.
+- Janela com detalhes e álbum fotográfico quando as fotografias têm URLs válidas.
+- Dois eventos demonstrativos: conversa sobre ISTs e malefícios do cigarro eletrônico.
 
-## Alterações visuais
-- Botão de modo claro/escuro, com preferência salva no navegador.
-- Seção de próximo evento e cronograma; o site destaca o evento futuro mais próximo com data cadastrada.
-- Logo da escola no cabeçalho e no rodapé. O arquivo `logo-escola.png` deve permanecer na mesma pasta dos arquivos do site.
+## Limitações importantes
+Esta é a parte pública e demonstrativa do site. Os eventos de exemplo são dados locais no JavaScript; ainda não existe painel administrativo funcional, banco conectado ou envio de fotos para a nuvem. O botão “Painel da equipe” explica essa etapa pendente. Para publicação real de conteúdo pela equipe, configure o Supabase, autenticação, políticas de acesso e armazenamento de imagens, e conecte o site ao banco. Não coloque chave `service_role` em arquivos públicos.
 
-A agenda mostra o horário inicial cadastrado. Horários detalhados adicionais ainda precisam ser adicionados ao sistema para montar um cronograma completo por etapas.
+## Próximo evento e cronograma
+O site seleciona automaticamente o evento publicado mais próximo que tenha data cadastrada. Os eventos demonstrativos não possuem datas, porque elas não foram fornecidas. Quando o sistema de cadastro estiver conectado, cada evento deverá ter data, horário, local e uma lista de itens de cronograma com horário e atividade. Não invente datas: cadastre apenas as confirmadas pela escola.

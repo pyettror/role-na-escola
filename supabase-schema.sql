@@ -1,21 +1,49 @@
--- Execute no SQL Editor do Supabase.
-create extension if not exists pgcrypto;
-create table if not exists public.eventos(id uuid primary key default gen_random_uuid(),titulo text not null,descricao text not null,categoria text not null default 'Geral',data date,horario_inicio time,local text,imagem_capa text,estado text not null default 'rascunho' check(estado in ('rascunho','publicado','cancelado')),destaque boolean not null default false,criado_em timestamptz not null default now());
-create table if not exists public.fotografias(id uuid primary key default gen_random_uuid(),evento_id uuid not null references public.eventos(id) on delete cascade,url text not null,alt text,posicao int not null default 0,criado_em timestamptz not null default now());
-create table if not exists public.videos(id uuid primary key default gen_random_uuid(),evento_id uuid not null references public.eventos(id) on delete cascade,titulo text not null default 'Assistir vídeo',url text not null,criado_em timestamptz not null default now());
-create table if not exists public.admins(user_id uuid primary key references auth.users(id) on delete cascade);
-alter table public.eventos enable row level security; alter table public.fotografias enable row level security; alter table public.videos enable row level security; alter table public.admins enable row level security;
-create policy "eventos leitura publica" on public.eventos for select using(estado='publicado' or exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin gerencia eventos" on public.eventos for all using(exists(select 1 from public.admins a where a.user_id=auth.uid())) with check(exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "fotos leitura publica" on public.fotografias for select using(exists(select 1 from public.eventos e where e.id=evento_id and e.estado='publicado') or exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin gerencia fotos" on public.fotografias for all using(exists(select 1 from public.admins a where a.user_id=auth.uid())) with check(exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "videos leitura publica" on public.videos for select using(exists(select 1 from public.eventos e where e.id=evento_id and e.estado='publicado') or exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin gerencia videos" on public.videos for all using(exists(select 1 from public.admins a where a.user_id=auth.uid())) with check(exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin le propria autorizacao" on public.admins for select using(user_id=auth.uid());
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('event-photos','event-photos',true,5242880,array['image/jpeg','image/png','image/webp']) on conflict(id) do update set public=true,file_size_limit=5242880,allowed_mime_types=array['image/jpeg','image/png','image/webp'];
-create policy "leitura publica bucket fotos" on storage.objects for select using(bucket_id='event-photos');
-create policy "admin envia fotos" on storage.objects for insert to authenticated with check(bucket_id='event-photos' and exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin atualiza fotos" on storage.objects for update to authenticated using(bucket_id='event-photos' and exists(select 1 from public.admins a where a.user_id=auth.uid())) with check(bucket_id='event-photos' and exists(select 1 from public.admins a where a.user_id=auth.uid()));
-create policy "admin exclui fotos" on storage.objects for delete to authenticated using(bucket_id='event-photos' and exists(select 1 from public.admins a where a.user_id=auth.uid()));
-insert into public.eventos(titulo,descricao,categoria,estado) select 'Conversa sobre doenças sexualmente transmissíveis','Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.','Saúde e conscientização','publicado' where not exists(select 1 from public.eventos where titulo='Conversa sobre doenças sexualmente transmissíveis');
-insert into public.eventos(titulo,descricao,categoria,estado) select 'Os malefícios do uso do cigarro eletrônico','Registro de uma atividade educativa sobre os riscos associados ao uso de cigarros eletrônicos, seus possíveis impactos na saúde, a dependência de nicotina e a importância da prevenção e da conscientização entre os jovens.','Saúde e conscientização','publicado' where not exists(select 1 from public.eventos where titulo='Os malefícios do uso do cigarro eletrônico');
+-- Esquema inicial de referência para Supabase.
+-- Revise e teste as políticas antes de usar com dados reais.
+create table if not exists public.eventos (
+  id uuid primary key default gen_random_uuid(),
+  titulo text not null,
+  descricao text not null default '',
+  categoria text not null default 'Evento escolar',
+  data date,
+  horario_inicio time,
+  local text,
+  imagem_capa text,
+  estado text not null default 'rascunho' check (estado in ('publicado','rascunho')),
+  destaque boolean not null default false,
+  cronograma jsonb not null default '[]'::jsonb,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+create table if not exists public.fotografias (
+  id uuid primary key default gen_random_uuid(),
+  evento_id uuid not null references public.eventos(id) on delete cascade,
+  url text not null,
+  alt text,
+  criado_em timestamptz not null default now()
+);
+create table if not exists public.videos (
+  id uuid primary key default gen_random_uuid(),
+  evento_id uuid not null references public.eventos(id) on delete cascade,
+  url text not null,
+  titulo text,
+  criado_em timestamptz not null default now()
+);
+create table if not exists public.admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  criado_em timestamptz not null default now()
+);
+alter table public.eventos enable row level security;
+alter table public.fotografias enable row level security;
+alter table public.videos enable row level security;
+alter table public.admins enable row level security;
+-- Conteúdo publicado pode ser lido publicamente.
+create policy "Leitura pública de eventos publicados" on public.eventos for select using (estado = 'publicado');
+create policy "Leitura pública de fotos de eventos publicados" on public.fotografias for select using (
+  exists (select 1 from public.eventos e where e.id = evento_id and e.estado = 'publicado')
+);
+create policy "Leitura pública de vídeos de eventos publicados" on public.videos for select using (
+  exists (select 1 from public.eventos e where e.id = evento_id and e.estado = 'publicado')
+);
+-- Não são criadas políticas de escrita neste arquivo. A escrita segura deve ser
+-- configurada após definir como os usuários autenticados serão validados como admins.
