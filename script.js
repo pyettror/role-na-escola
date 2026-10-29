@@ -22,6 +22,40 @@
   // Para inserir cronogramas reais, inclua itens em "cronograma" com horário e atividade.
   const demoEvents = [
     {
+      id:"demo-biomas-bahia",
+      titulo:"BIOMAS DA BAHIA — O QUE SOBRARÁ PARA O FUTURO?",
+      descricao:"Evento escolar sobre os biomas da Bahia, meio ambiente, reciclagem, queimadas, ciência e sustentabilidade.",
+      categoria:"Meio ambiente",
+      data:"2026-10-30",
+      horario_inicio:"08:00",
+      local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa:"",
+      estado:"publicado",
+      destaque:true,
+      cronograma:[
+        {horario:"08:00",atividade:"Abertura oficial — Jéssica"},
+        {horario:"08:10",atividade:"Fala da diretoria — Bia"},
+        {horario:"08:20",atividade:"Fala dos estudantes — Says Havalos"},
+        {horario:"08:30",atividade:"Palestra — Biólogo Ermersson Douglas"},
+        {horario:"09:10",atividade:"Intervalo"},
+        {horario:"09:30",atividade:"Fim do intervalo"},
+        {horario:"09:30",atividade:"Palestra — Químico Eldo Gomes"},
+        {horario:"10:00",atividade:"Desfile com matérias recicláveis — 2° B"},
+        {horario:"10:20",atividade:"Abertura das salas temáticas — Yasmin"},
+        {horario:"11:05",atividade:"Exposição de materiais matemáticos recicláveis — 3° A"},
+        {horario:"11:20",atividade:"Sala temática: queimadas — 3° B"},
+        {horario:"11:35",atividade:"Jogos matemáticos — 1° A com Edineia"},
+        {horario:"11:50",atividade:"Jogos matemáticos — 2° A com Edineia"},
+        {horario:"11:50",atividade:"Exposição de maquetes químicas — 2° B, com Bonifácio"},
+        {horario:"11:50",atividade:"Paródia — 2° A, com Eliene"},
+        {horario:"12:00",atividade:"Intervalo"},
+        {horario:"13:00",atividade:"Fim do intervalo"},
+        {horario:"13:00",atividade:"Oficina de fotografia — Natan"},
+        {horario:"13:00",atividade:"Oficina de bem-estar / meio ambiente / Sabonete artesanal — responsável a confirmar"}
+      ],
+      fotografias:[]
+    },
+    {
       id:"demo-ist", titulo:"Conversa sobre doenças sexualmente transmissíveis",
       descricao:"Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.",
       categoria:"Saúde e conscientização", data:null, horario_inicio:null, local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",

@@ -34,3 +34,12 @@ Esta é a parte pública e demonstrativa do site. Os eventos de exemplo são dad
 
 ## Próximo evento e cronograma
 O site seleciona automaticamente o evento publicado mais próximo que tenha data cadastrada. Os eventos demonstrativos não possuem datas, porque elas não foram fornecidas. Quando o sistema de cadastro estiver conectado, cada evento deverá ter data, horário, local e uma lista de itens de cronograma com horário e atividade. Não invente datas: cadastre apenas as confirmadas pela escola.
+
+
+## Evento adicionado: 30/10/2026
+Foi incluído o evento **BIOMAS DA BAHIA — O QUE SOBRARÁ PARA O FUTURO?**, com o cronograma fornecido. A seção de agenda foi movida para logo após a abertura principal (hero), para que seja uma das primeiras partes vistas na página.
+
+Observações:
+- A oficina de bem-estar / meio ambiente / sabonete artesanal está com responsável indicado como "responsável a confirmar", pois o nome não foi informado.
+- Os horários simultâneos às 11:50 e às 13:00 foram mantidos como fornecidos.
+- O evento está inserido como dado demonstrativo no `script.js`. Quando houver banco de dados conectado, ele também precisará ser cadastrado no banco para aparecer no site conectado.
