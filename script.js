@@ -1,4 +1,4 @@
-
+```javascript
 (() => {
   "use strict";
 
@@ -69,9 +69,7 @@
     return `<div class="featured-placeholder"><span>ROLÊ NA ESCOLA<br><br>${esc(title).slice(0, 70)}</span></div>`;
   }
 
-  // --------------------------------------------------
   // HISTÓRICO LOCAL
-  // --------------------------------------------------
 
   function addHistory(action, detail) {
     try {
@@ -106,9 +104,7 @@
       : `<p class="empty-state">Nenhuma atividade registrada neste navegador.</p>`;
   }
 
-  // --------------------------------------------------
   // DADOS PÚBLICOS
-  // --------------------------------------------------
 
   async function loadPhotosForEvents(list) {
     const ids = list.map(e => Number(e.id)).filter(Number.isFinite);
@@ -198,9 +194,7 @@
     return events.filter(e => e.estado === "publicado");
   }
 
-  // --------------------------------------------------
   // PÁGINA PÚBLICA
-  // --------------------------------------------------
 
   function coverMarkup(event) {
     const url = safeUrl(event.imagem_capa);
@@ -367,9 +361,7 @@
     renderGallery();
   }
 
-  // --------------------------------------------------
   // LOGIN E AUTORIZAÇÃO
-  // --------------------------------------------------
 
   async function checkAdministrator(user) {
     const { data, error } = await db.from("administradores")
@@ -441,9 +433,7 @@
     $("loginForm").reset();
   }
 
-  // --------------------------------------------------
   // NAVEGAÇÃO DO PAINEL
-  // --------------------------------------------------
 
   const adminPages = {
     dashboard: ["adminDashboardSection", "Visão geral"],
@@ -489,9 +479,7 @@
     switchAdminTab(tab);
   }
 
-  // --------------------------------------------------
   // EVENTOS: LISTA, PESQUISA E FILTROS
-  // --------------------------------------------------
 
   let adminEventsCache = [];
 
@@ -519,7 +507,6 @@
   function renderAdminEvents() {
     const search = ($("adminEventSearch")?.value || "").toLowerCase();
     const status = $("adminEventStatusFilter")?.value || "todos";
-    const year = $("adminEventYearFilter")?.value || "todos";
 
     const years = [...new Set(adminEventsCache.map(e => e.data_evento?.slice(0, 4)).filter(Boolean))].sort().reverse();
 
@@ -618,9 +605,7 @@
     }
   }
 
-  // --------------------------------------------------
   // CADASTRO E EDIÇÃO
-  // --------------------------------------------------
 
   function resetEventForm() {
     $("eventForm").reset();
@@ -735,9 +720,7 @@
     }
   }
 
-  // --------------------------------------------------
   // DASHBOARD E ESTATÍSTICAS
-  // --------------------------------------------------
 
   async function loadDashboard() {
     try {
@@ -781,9 +764,7 @@
     }
   }
 
-  // --------------------------------------------------
   // PROGRAMAÇÃO DOS EVENTOS
-  // --------------------------------------------------
 
   async function loadScheduleOptions() {
     await loadAdminEvents();
@@ -899,9 +880,7 @@
     }
   }
 
-  // --------------------------------------------------
   // FOTOGRAFIAS
-  // --------------------------------------------------
 
   async function uploadPhotos(event) {
     event.preventDefault();
@@ -1005,9 +984,7 @@
     }
   }
 
-  // --------------------------------------------------
   // PUBLICAÇÕES
-  // --------------------------------------------------
 
   async function loadPublications() {
     try {
@@ -1053,9 +1030,7 @@
     await loadDashboard();
   }
 
-  // --------------------------------------------------
   // TEMA E INTERFACE
-  // --------------------------------------------------
 
   function setTheme(theme) {
     const dark = theme === "dark";
@@ -1133,9 +1108,6 @@
     const publication = event.target.closest("[data-toggle-publication]");
     if (publication) togglePublication(publication.dataset.togglePublication, publication.dataset.published === "true");
 
-    const tab = event.target.closest("[data-admin-tab]");
-    if (tab) goTo(tab.dataset.adminTab);
-
     const action = event.target.closest("[data-admin-action]");
     if (action) {
       const target = action.dataset.adminAction;
@@ -1176,11 +1148,10 @@
     $("menuToggle").setAttribute("aria-expanded", String(open));
   });
 
-  // --------------------------------------------------
   // INICIALIZAÇÃO
-  // --------------------------------------------------
 
   renderAll();
   loadEventsFromSupabase();
   restoreSession();
 })();
+```
