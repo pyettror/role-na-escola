@@ -18,11 +18,13 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="#inicio" aria-label="Rolê na Escola - início">
-        <img src="logo-escola.png" alt="Logo do Colégio Estadual Filomena Pereira Rodrigues">
+        <img src="logo-escola.png" alt="Logo da escola">
         <span><strong>Rolê na Escola</strong><small>Memórias que ficam</small></span>
       </a>
       <div class="header-actions">
-        <button id="themeToggle" class="icon-button theme-button" type="button" aria-label="Ativar modo escuro" title="Alternar tema"><span id="themeIcon">☾</span><span id="themeLabel">Modo escuro</span></button>
+        <button id="themeToggle" class="icon-button theme-button" type="button" aria-label="Ativar modo escuro" title="Alternar tema">
+          <span id="themeIcon">☾</span><span id="themeLabel">Modo escuro</span>
+        </button>
         <button id="menuToggle" class="icon-button menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button>
       </div>
       <nav id="mainNav" class="main-nav" aria-label="Navegação principal">
@@ -145,150 +147,448 @@
     </div>
   </footer>
 
-  <!-- Janela de detalhes do evento -->
+  <!-- DETALHES PÚBLICOS DO EVENTO -->
   <dialog id="eventDialog" class="modal event-modal">
     <button class="modal-close" type="button" data-close="eventDialog" aria-label="Fechar">×</button>
     <div id="eventDetails"></div>
   </dialog>
 
-  <!-- Login administrativo -->
+  <!-- LOGIN -->
   <dialog id="loginDialog" class="modal login-modal">
     <button class="modal-close" type="button" data-close="loginDialog" aria-label="Fechar">×</button>
-
     <span class="eyebrow">ÁREA RESTRITA</span>
-    <h2>Painel da equipe</h2>
-    <p>Entre com sua conta autorizada para administrar os eventos do Rolê na Escola.</p>
+    <h2>Painel administrativo</h2>
+    <p>Entre com sua conta autorizada para administrar o Rolê na Escola.</p>
 
     <form id="loginForm" class="admin-form">
       <label for="adminEmail">E-mail</label>
-      <input
-        id="adminEmail"
-        name="email"
-        type="email"
-        placeholder="Seu e-mail"
-        autocomplete="username"
-        required
-      >
+      <input id="adminEmail" name="email" type="email" placeholder="Seu e-mail" autocomplete="username" required>
 
       <label for="adminPassword">Senha</label>
-      <input
-        id="adminPassword"
-        name="password"
-        type="password"
-        placeholder="Sua senha"
-        autocomplete="current-password"
-        required
-      >
+      <input id="adminPassword" name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required>
 
       <p id="loginError" class="admin-message" role="alert"></p>
-
-      <button class="button button-primary" type="submit" id="loginSubmit">
-        Entrar no painel
-      </button>
+      <button class="button button-primary" type="submit" id="loginSubmit">Entrar no painel</button>
     </form>
   </dialog>
 
-  <!-- Painel administrativo -->
-  <dialog id="adminDialog" class="modal admin-modal">
-    <button class="modal-close" type="button" data-close="adminDialog" aria-label="Fechar">×</button>
+  <!-- PAINEL ADMINISTRATIVO -->
+  <dialog id="adminDialog" class="modal admin-modal admin-dashboard">
 
-    <div class="admin-header">
-      <div>
-        <span class="eyebrow">ÁREA ADMINISTRATIVA</span>
-        <h2>Gerenciar Rolê na Escola</h2>
-        <p>Organize os eventos e os registros da comunidade escolar.</p>
-      </div>
-      <button id="adminLogout" class="button" type="button">Sair</button>
-    </div>
+    <div class="dashboard-layout">
 
-    <div class="admin-tabs">
-      <button type="button" class="admin-tab active" data-admin-tab="events">Eventos</button>
-      <button type="button" class="admin-tab" data-admin-tab="eventForm">Novo evento</button>
-      <button type="button" class="admin-tab" data-admin-tab="photos">Fotos</button>
-    </div>
-
-    <section id="adminEventsSection" class="admin-section">
-      <h3>Eventos cadastrados</h3>
-      <p>Consulte os eventos e escolha qual deseja editar.</p>
-      <div id="adminEventsList">
-        <p class="loading">Carregando eventos…</p>
-      </div>
-    </section>
-
-    <section id="adminEventFormSection" class="admin-section" hidden>
-      <h3 id="adminFormTitle">Cadastrar evento</h3>
-
-      <form id="eventForm" class="admin-form">
-        <input type="hidden" id="eventId">
-
-        <label for="eventTitle">Título do evento</label>
-        <input id="eventTitle" type="text" maxlength="180" required>
-
-        <label for="eventDescription">Descrição</label>
-        <textarea id="eventDescription" rows="4" placeholder="Conte um pouco sobre o evento."></textarea>
-
-        <div class="admin-form-grid">
+      <!-- MENU LATERAL -->
+      <aside class="dashboard-sidebar">
+        <div class="dashboard-brand">
+          <img src="logo-escola.png" alt="">
           <div>
-            <label for="eventDate">Data</label>
-            <input id="eventDate" type="date" required>
-          </div>
-          <div>
-            <label for="eventTime">Horário de início</label>
-            <input id="eventTime" type="time">
+            <strong>Rolê na Escola</strong>
+            <small>Administração</small>
           </div>
         </div>
 
-        <label for="eventCategory">Categoria</label>
-        <input id="eventCategory" type="text" placeholder="Ex.: Meio ambiente">
+        <div class="sidebar-label">MENU PRINCIPAL</div>
 
-        <label for="eventLocation">Local</label>
-        <input id="eventLocation" type="text" placeholder="Local do evento">
+        <nav class="dashboard-nav" aria-label="Menu administrativo">
+          <button type="button" class="dashboard-nav-item active" data-admin-tab="dashboard">
+            <span>▦</span> Visão geral
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="events">
+            <span>▣</span> Eventos
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="eventForm">
+            <span>＋</span> Novo evento
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="schedule">
+            <span>☷</span> Programação
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="photos">
+            <span>▧</span> Galeria de fotos
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="publications">
+            <span>◉</span> Publicações
+          </button>
+          <button type="button" class="dashboard-nav-item" data-admin-tab="history">
+            <span>◷</span> Histórico
+          </button>
+        </nav>
 
-        <label for="eventCover">Imagem de capa</label>
-        <input id="eventCover" type="file" accept="image/*">
-        <small>Se não selecionar uma nova imagem, a capa atual será mantida ao editar.</small>
-
-        <label class="admin-checkbox">
-          <input id="eventFeatured" type="checkbox">
-          Destacar este evento na página inicial
-        </label>
-
-        <label class="admin-checkbox">
-          <input id="eventPublished" type="checkbox">
-          Publicar evento no site
-        </label>
-
-        <div class="admin-form-actions">
-          <button class="button button-primary" type="submit" id="eventSaveButton">Salvar evento</button>
-          <button class="button" type="button" id="eventCancelButton">Cancelar</button>
+        <div class="sidebar-bottom">
+          <button type="button" class="dashboard-nav-item" data-admin-tab="settings">
+            <span>⚙</span> Configurações
+          </button>
+          <button id="adminLogout" class="dashboard-logout" type="button">
+            <span>↪</span> Sair da conta
+          </button>
         </div>
+      </aside>
 
-        <p id="eventFormMessage" class="admin-message" role="status"></p>
-      </form>
-    </section>
+      <!-- CONTEÚDO -->
+      <div class="dashboard-main">
 
-    <section id="adminPhotosSection" class="admin-section" hidden>
-      <h3>Fotos dos eventos</h3>
-      <p>Escolha um evento para adicionar imagens ao álbum.</p>
+        <header class="dashboard-topbar">
+          <div>
+            <span class="dashboard-breadcrumb">ROLÊ NA ESCOLA / ADMINISTRAÇÃO</span>
+            <h2 id="dashboardPageTitle">Visão geral</h2>
+          </div>
+          <div class="dashboard-user">
+            <div class="dashboard-avatar">A</div>
+            <div>
+              <strong>Administrador</strong>
+              <small>Conta autorizada</small>
+            </div>
+            <button class="modal-close dashboard-close" type="button" data-close="adminDialog" aria-label="Fechar painel">×</button>
+          </div>
+        </header>
 
-      <form id="photoForm" class="admin-form">
-        <label for="photoEventSelect">Evento</label>
-        <select id="photoEventSelect" required>
-          <option value="">Selecione um evento</option>
-        </select>
+        <div class="dashboard-content">
 
-        <label for="eventPhotos">Selecionar fotos</label>
-        <input id="eventPhotos" type="file" accept="image/*" multiple required>
+          <!-- VISÃO GERAL -->
+          <section id="adminDashboardSection" class="admin-section dashboard-page">
+            <div class="dashboard-welcome">
+              <div>
+                <span class="eyebrow">PAINEL DE CONTROLE</span>
+                <h3>Bem-vindo ao painel!</h3>
+                <p>Acompanhe e organize a vida escolar em um só lugar.</p>
+              </div>
+              <button type="button" class="button button-primary" data-admin-action="new-event">＋ Criar evento</button>
+            </div>
 
-        <label for="photoCaption">Legenda (opcional)</label>
-        <input id="photoCaption" type="text" placeholder="Legenda das fotos">
+            <div class="dashboard-stats">
+              <article class="stat-card">
+                <div class="stat-icon blue">▣</div>
+                <span>Total de eventos</span>
+                <strong id="statTotalEvents">—</strong>
+                <small>Eventos cadastrados</small>
+              </article>
+              <article class="stat-card">
+                <div class="stat-icon green">◉</div>
+                <span>Publicados</span>
+                <strong id="statPublishedEvents">—</strong>
+                <small>Visíveis no site</small>
+              </article>
+              <article class="stat-card">
+                <div class="stat-icon orange">◷</div>
+                <span>Rascunhos</span>
+                <strong id="statDraftEvents">—</strong>
+                <small>Aguardando publicação</small>
+              </article>
+              <article class="stat-card">
+                <div class="stat-icon purple">▧</div>
+                <span>Fotografias</span>
+                <strong id="statTotalPhotos">—</strong>
+                <small>Imagens nos álbuns</small>
+              </article>
+            </div>
 
-        <button class="button button-primary" type="submit" id="photoUploadButton">Enviar fotos</button>
-        <p id="photoFormMessage" class="admin-message" role="status"></p>
-      </form>
+            <div class="dashboard-columns">
+              <section class="dashboard-panel">
+                <div class="panel-heading">
+                  <div>
+                    <h3>Eventos recentes</h3>
+                    <p>Últimos eventos cadastrados.</p>
+                  </div>
+                  <button type="button" class="text-action" data-admin-tab="events">Ver todos →</button>
+                </div>
+                <div id="dashboardRecentEvents">
+                  <p class="loading">Carregando eventos…</p>
+                </div>
+              </section>
 
-      <div id="adminPhotoList"></div>
-    </section>
+              <section class="dashboard-panel">
+                <div class="panel-heading">
+                  <div>
+                    <h3>Próximos eventos</h3>
+                    <p>Compromissos futuros.</p>
+                  </div>
+                </div>
+                <div id="dashboardUpcomingEvents">
+                  <p class="loading">Carregando agenda…</p>
+                </div>
+              </section>
+            </div>
+
+            <section class="dashboard-panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>Acesso rápido</h3>
+                  <p>Atalhos para as tarefas mais utilizadas.</p>
+                </div>
+              </div>
+              <div class="quick-actions">
+                <button type="button" data-admin-action="new-event"><span>＋</span><strong>Criar evento</strong><small>Cadastrar uma atividade</small></button>
+                <button type="button" data-admin-action="photos"><span>▧</span><strong>Enviar fotos</strong><small>Adicionar imagens</small></button>
+                <button type="button" data-admin-action="schedule"><span>☷</span><strong>Programação</strong><small>Organizar horários</small></button>
+                <button type="button" data-admin-action="public-site"><span>↗</span><strong>Ver site</strong><small>Abrir página pública</small></button>
+              </div>
+            </section>
+          </section>
+
+          <!-- EVENTOS -->
+          <section id="adminEventsSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">GERENCIAMENTO</span>
+                <h3>Todos os eventos</h3>
+                <p>Consulte, pesquise e administre os eventos cadastrados.</p>
+              </div>
+              <button type="button" class="button button-primary" data-admin-action="new-event">＋ Novo evento</button>
+            </div>
+
+            <div class="dashboard-panel">
+              <div class="event-toolbar">
+                <input id="adminEventSearch" type="search" placeholder="Pesquisar evento..." aria-label="Pesquisar eventos">
+                <select id="adminEventStatusFilter" aria-label="Filtrar por publicação">
+                  <option value="todos">Todas as situações</option>
+                  <option value="publicado">Publicados</option>
+                  <option value="rascunho">Rascunhos</option>
+                </select>
+                <select id="adminEventYearFilter" aria-label="Filtrar por ano">
+                  <option value="todos">Todos os anos</option>
+                </select>
+              </div>
+              <div id="adminEventsList">
+                <p class="loading">Carregando eventos…</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- FORMULÁRIO DE EVENTO -->
+          <section id="adminEventFormSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">GERENCIAMENTO DE CONTEÚDO</span>
+                <h3 id="adminFormTitle">Cadastrar novo evento</h3>
+                <p>Preencha os dados para criar um registro no site.</p>
+              </div>
+            </div>
+
+            <form id="eventForm" class="dashboard-form">
+              <input type="hidden" id="eventId">
+
+              <section class="dashboard-panel form-panel">
+                <div class="form-section-heading">
+                  <span>01</span>
+                  <div><h4>Informações principais</h4><p>Identificação e descrição do evento.</p></div>
+                </div>
+
+                <label for="eventTitle">Título do evento *</label>
+                <input id="eventTitle" type="text" maxlength="180" placeholder="Ex.: Feira de Ciências 2026" required>
+
+                <label for="eventDescription">Descrição</label>
+                <textarea id="eventDescription" rows="5" placeholder="Conte um pouco sobre o evento, seus objetivos e atividades."></textarea>
+
+                <div class="admin-form-grid">
+                  <div>
+                    <label for="eventCategory">Categoria</label>
+                    <select id="eventCategory">
+                      <option value="Evento escolar">Evento escolar</option>
+                      <option value="Meio ambiente">Meio ambiente</option>
+                      <option value="Cultura e arte">Cultura e arte</option>
+                      <option value="Esportes">Esportes</option>
+                      <option value="Ciência e tecnologia">Ciência e tecnologia</option>
+                      <option value="Saúde e conscientização">Saúde e conscientização</option>
+                      <option value="Projetos escolares">Projetos escolares</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="eventLocation">Local</label>
+                    <input id="eventLocation" type="text" placeholder="Local do evento">
+                  </div>
+                </div>
+              </section>
+
+              <section class="dashboard-panel form-panel">
+                <div class="form-section-heading">
+                  <span>02</span>
+                  <div><h4>Data e horário</h4><p>Quando o evento acontecerá?</p></div>
+                </div>
+
+                <div class="admin-form-grid">
+                  <div>
+                    <label for="eventDate">Data *</label>
+                    <input id="eventDate" type="date" required>
+                  </div>
+                  <div>
+                    <label for="eventTime">Horário de início</label>
+                    <input id="eventTime" type="time">
+                  </div>
+                </div>
+              </section>
+
+              <section class="dashboard-panel form-panel">
+                <div class="form-section-heading">
+                  <span>03</span>
+                  <div><h4>Imagem de capa</h4><p>Escolha a imagem principal do evento.</p></div>
+                </div>
+
+                <label for="eventCover">Selecionar imagem</label>
+                <input id="eventCover" type="file" accept="image/*">
+                <small>Se não selecionar uma nova imagem, a capa atual será mantida ao editar.</small>
+              </section>
+
+              <section class="dashboard-panel form-panel">
+                <div class="form-section-heading">
+                  <span>04</span>
+                  <div><h4>Publicação</h4><p>Defina como o evento aparecerá no site.</p></div>
+                </div>
+
+                <label class="admin-checkbox">
+                  <input id="eventFeatured" type="checkbox">
+                  Destacar este evento na página inicial
+                </label>
+
+                <label class="admin-checkbox">
+                  <input id="eventPublished" type="checkbox">
+                  Publicar evento no site
+                </label>
+              </section>
+
+              <div class="form-bottom-actions">
+                <p id="eventFormMessage" class="admin-message" role="status"></p>
+                <div>
+                  <button class="button" type="button" id="eventCancelButton">Cancelar</button>
+                  <button class="button button-primary" type="submit" id="eventSaveButton">Salvar evento</button>
+                </div>
+              </div>
+            </form>
+          </section>
+
+          <!-- PROGRAMAÇÃO -->
+          <section id="adminScheduleSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">ORGANIZAÇÃO</span>
+                <h3>Programação dos eventos</h3>
+                <p>Monte cronogramas com horários, atividades e responsáveis.</p>
+              </div>
+            </div>
+
+            <div class="dashboard-panel">
+              <label for="scheduleEventSelect">Selecione o evento</label>
+              <select id="scheduleEventSelect">
+                <option value="">Escolha um evento</option>
+              </select>
+
+              <div id="scheduleEditor" hidden>
+                <div class="panel-heading">
+                  <div><h3>Atividades do evento</h3><p>Adicione e organize os horários.</p></div>
+                  <button type="button" class="button button-primary" id="addScheduleItem">＋ Adicionar atividade</button>
+                </div>
+
+                <div id="scheduleItemsList"></div>
+
+                <div class="form-bottom-actions">
+                  <p id="scheduleMessage" class="admin-message" role="status"></p>
+                  <button type="button" class="button button-primary" id="saveScheduleButton">Salvar programação</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- FOTOS -->
+          <section id="adminPhotosSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">MEMÓRIAS DA ESCOLA</span>
+                <h3>Galeria de fotografias</h3>
+                <p>Envie e organize os registros dos eventos.</p>
+              </div>
+            </div>
+
+            <div class="dashboard-panel">
+              <h3>Adicionar fotografias</h3>
+              <p>Escolha o evento e selecione as imagens que deseja publicar.</p>
+
+              <form id="photoForm" class="admin-form">
+                <label for="photoEventSelect">Evento</label>
+                <select id="photoEventSelect" required>
+                  <option value="">Selecione um evento</option>
+                </select>
+
+                <label for="eventPhotos">Selecionar fotografias</label>
+                <input id="eventPhotos" type="file" accept="image/*" multiple required>
+
+                <label for="photoCaption">Legenda (opcional)</label>
+                <input id="photoCaption" type="text" placeholder="Legenda das fotografias">
+
+                <button class="button button-primary" type="submit" id="photoUploadButton">Enviar fotografias</button>
+                <p id="photoFormMessage" class="admin-message" role="status"></p>
+              </form>
+            </div>
+
+            <div class="dashboard-panel">
+              <div class="panel-heading">
+                <div><h3>Fotografias cadastradas</h3><p>Imagens organizadas por evento.</p></div>
+                <select id="adminPhotoEventFilter" aria-label="Filtrar fotografias por evento">
+                  <option value="todos">Todos os eventos</option>
+                </select>
+              </div>
+              <div id="adminPhotoList">
+                <p class="loading">Carregando fotografias…</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- PUBLICAÇÕES -->
+          <section id="adminPublicationsSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">CONTROLE EDITORIAL</span>
+                <h3>Publicações</h3>
+                <p>Controle o que está visível na página pública.</p>
+              </div>
+            </div>
+
+            <div class="dashboard-panel">
+              <div class="publication-summary">
+                <div><span>Publicados</span><strong id="publicationPublishedCount">—</strong></div>
+                <div><span>Rascunhos</span><strong id="publicationDraftCount">—</strong></div>
+              </div>
+              <div id="adminPublicationsList"></div>
+            </div>
+          </section>
+
+          <!-- HISTÓRICO -->
+          <section id="adminHistorySection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">ACOMPANHAMENTO</span>
+                <h3>Histórico de atividades</h3>
+                <p>Consulte as ações administrativas realizadas.</p>
+              </div>
+            </div>
+            <div class="dashboard-panel">
+              <div id="adminHistoryList">
+                <p class="empty-state">O histórico será exibido aqui quando os registros de atividade forem implementados.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- CONFIGURAÇÕES -->
+          <section id="adminSettingsSection" class="admin-section dashboard-page" hidden>
+            <div class="page-intro">
+              <div>
+                <span class="eyebrow">PREFERÊNCIAS</span>
+                <h3>Configurações</h3>
+                <p>Informações e acesso administrativo.</p>
+              </div>
+            </div>
+            <div class="dashboard-panel">
+              <h3>Conta administrativa</h3>
+              <p>Esta área é restrita a contas autorizadas no Supabase.</p>
+              <div class="settings-account">
+                <span class="settings-avatar">A</span>
+                <div><strong>Administrador</strong><small id="adminAccountEmail">Conta conectada</small></div>
+              </div>
+              <button id="settingsLogout" class="button" type="button">Sair da conta</button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
   </dialog>
 
   <script type="application/ld+json">
