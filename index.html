@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -8,8 +9,10 @@
   <title>Rolê na Escola | Memórias que ficam</title>
   <link rel="icon" href="logo-escola.png">
   <link rel="stylesheet" href="styles.css">
- <script defer src="supabase-config.js"></script>
-<script defer src="script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="supabase-config.js"></script>
+  <script defer src="script.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -61,8 +64,6 @@
       <div id="featuredEvent" class="featured-slot"><p class="loading">Carregando eventos…</p></div>
     </section>
 
-
-
     <section id="eventos" class="container section events-section">
       <div class="section-heading section-heading-filter"><div><span class="eyebrow">REGISTROS E LEMBRANÇAS</span><h2>Galeria de eventos</h2><p>Relembre atividades, encontros e projetos realizados na escola.</p></div><label class="filter-label">Filtrar por ano<select id="yearFilter"><option value="todos">Todos os anos</option></select></label></div>
       <div id="eventGrid" class="event-grid"></div>
@@ -80,6 +81,8 @@
 
   <dialog id="eventDialog" class="modal event-modal"><button class="modal-close" type="button" data-close="eventDialog" aria-label="Fechar">×</button><div id="eventDetails"></div></dialog>
   <dialog id="loginDialog" class="modal login-modal"><button class="modal-close" type="button" data-close="loginDialog" aria-label="Fechar">×</button><span class="eyebrow">ÁREA RESTRITA</span><h2>Painel da equipe</h2><p>O acesso administrativo será ativado após configurar o banco de dados e as contas autorizadas.</p><div class="notice"><strong>Configuração necessária</strong><br>Esta versão já tem a interface pública. Para publicar eventos, enviar fotos e administrar conteúdo com segurança, é necessário concluir a configuração do Supabase descrita no README.</div><button class="button button-primary" type="button" data-close="loginDialog">Entendi</button></dialog>
+
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Rolê na Escola","inLanguage":"pt-BR"}</script>
 </body>
 </html>
+```
