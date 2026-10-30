@@ -304,3 +304,468 @@ body.dark .admin-event-row p {
     font-size: 0.85rem;
   }
 }
+
+/* =========================================
+   PAINEL ADMINISTRATIVO COMPLETO
+   Complemento visual — Rolê na Escola
+========================================= */
+
+/* Janela principal */
+.admin-modal {
+  width: min(1180px, calc(100% - 32px));
+  max-width: 1180px;
+  max-height: 94vh;
+  padding: 28px;
+  border-radius: 20px;
+}
+
+.admin-modal[open] {
+  display: block;
+}
+
+.admin-modal [hidden],
+.admin-section[hidden] {
+  display: none !important;
+}
+
+/* Estrutura geral */
+.admin-dashboard {
+  width: 100%;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-sidebar button,
+.admin-sidebar [data-admin-tab] {
+  width: 100%;
+  text-align: left;
+  padding: 11px 13px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  transition: .2s;
+}
+
+.admin-sidebar button:hover,
+.admin-sidebar [data-admin-tab]:hover,
+.admin-sidebar button.active,
+.admin-sidebar [data-admin-tab].active {
+  color: var(--blue);
+  background: var(--soft-blue);
+}
+
+.admin-content {
+  min-width: 0;
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-topbar h2 {
+  margin-bottom: 4px;
+}
+
+/* Estatísticas */
+.stats-grid,
+.admin-stats,
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 26px;
+}
+
+.stat-card,
+.admin-stat-card {
+  padding: 19px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+}
+
+.stat-card strong,
+.admin-stat-card strong {
+  display: block;
+  font-family: Manrope, sans-serif;
+  font-size: 1.8rem;
+  color: var(--blue);
+  line-height: 1.2;
+}
+
+.stat-card span,
+.admin-stat-card span {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+/* Cartões e áreas do painel */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.admin-panel,
+.dashboard-panel,
+.admin-card {
+  min-width: 0;
+  padding: 20px;
+  margin-bottom: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-panel h3,
+.dashboard-panel h3,
+.admin-card h3 {
+  margin-bottom: 14px;
+}
+
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-quick-actions button {
+  flex: 1 1 150px;
+}
+
+/* Barra de pesquisa e filtros */
+.admin-toolbar,
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.admin-toolbar > *,
+.admin-filters > * {
+  min-width: 0;
+}
+
+.admin-toolbar input,
+.admin-toolbar select,
+.admin-filters input,
+.admin-filters select {
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Formulários */
+.admin-form {
+  gap: 12px;
+}
+
+.admin-form label {
+  color: var(--text);
+}
+
+.admin-form input:not([type="checkbox"]),
+.admin-form textarea,
+.admin-form select {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+  border-radius: 11px;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+  border-color: var(--blue2);
+  box-shadow: 0 0 0 3px rgba(37, 99, 199, .12);
+}
+
+.admin-form-grid {
+  gap: 18px;
+}
+
+.admin-form-actions button {
+  min-height: 42px;
+}
+
+/* Listagem de eventos */
+.admin-event-row {
+  background: var(--soft);
+  border-color: var(--line);
+  border-radius: 13px;
+  padding: 17px;
+}
+
+.admin-event-row > div {
+  min-width: 0;
+}
+
+.admin-event-row button {
+  margin: 3px;
+}
+
+.admin-status {
+  background: var(--soft-blue);
+  color: var(--blue);
+}
+
+/* Programação */
+.schedule-item,
+.schedule-row,
+.admin-schedule-item {
+  display: grid;
+  grid-template-columns: minmax(90px, .35fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  margin: 10px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.schedule-item input,
+.schedule-row input,
+.admin-schedule-item input {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Fotos */
+.admin-photo-grid,
+.photo-grid,
+.event-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-photo-card,
+.photo-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+}
+
+.admin-photo-card img,
+.photo-card img {
+  display: block;
+  width: 100%;
+  height: 155px;
+  object-fit: cover;
+}
+
+.admin-photo-card p,
+.photo-card p {
+  padding: 10px;
+  margin: 0;
+  color: var(--muted);
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-photo-card button,
+.photo-card button {
+  margin: 0 10px 10px;
+}
+
+/* Publicações e histórico */
+.admin-history-item,
+.history-item,
+.publication-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.admin-history-item p,
+.history-item p,
+.publication-row p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+/* Botões e mensagens */
+.admin-modal .button {
+  min-height: 42px;
+}
+
+.admin-message {
+  margin-top: 8px;
+}
+
+.admin-message.error {
+  color: #d04444;
+}
+
+.admin-message.success {
+  color: #16834a;
+}
+
+/* Tema escuro */
+body.dark .admin-sidebar,
+body.dark .admin-panel,
+body.dark .dashboard-panel,
+body.dark .admin-card,
+body.dark .stat-card,
+body.dark .admin-stat-card {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+body.dark .admin-event-row,
+body.dark .schedule-item,
+body.dark .schedule-row,
+body.dark .admin-schedule-item,
+body.dark .admin-history-item,
+body.dark .history-item,
+body.dark .publication-row {
+  background: var(--soft);
+  border-color: var(--line);
+}
+
+body.dark .admin-form input:not([type="checkbox"]),
+body.dark .admin-form textarea,
+body.dark .admin-form select,
+body.dark .admin-toolbar input,
+body.dark .admin-toolbar select,
+body.dark .admin-filters input,
+body.dark .admin-filters select {
+  background: var(--soft);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+/* Tablets */
+@media (max-width: 900px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .admin-sidebar button,
+  .admin-sidebar [data-admin-tab] {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .stats-grid,
+  .admin-stats,
+  .dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+  .admin-modal {
+    width: calc(100% - 16px);
+    max-height: 96vh;
+    padding: 17px 13px;
+  }
+
+  .admin-header {
+    padding-right: 0;
+  }
+
+  .admin-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid,
+  .admin-stats,
+  .dashboard-stats {
+    gap: 9px;
+  }
+
+  .stat-card,
+  .admin-stat-card {
+    padding: 13px;
+  }
+
+  .stat-card strong,
+  .admin-stat-card strong {
+    font-size: 1.45rem;
+  }
+
+  .admin-photo-grid,
+  .photo-grid,
+  .event-photos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-item,
+  .schedule-row,
+  .admin-schedule-item {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-history-item,
+  .history-item,
+  .publication-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-toolbar,
+  .admin-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-toolbar input,
+  .admin-toolbar select,
+  .admin-filters input,
+  .admin-filters select {
+    width: 100%;
+  }
+}
