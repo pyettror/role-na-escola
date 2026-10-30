@@ -10,11 +10,7 @@
   };
 
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 
   const formatDate = (date) => {
@@ -39,7 +35,7 @@
     }
   };
 
-  // Eventos demonstrativos usados como alternativa caso a conexão falhe.
+  // Eventos que já estavam cadastrados no site.
   const demoEvents = [
     {
       id: "biomas-bahia-2026",
@@ -108,14 +104,10 @@
   let events = [...demoEvents];
   let db = null;
 
-  // Conecta ao Supabase e carrega os eventos publicados.
+  // Carrega os eventos do Supabase sem perder os dados demonstrativos.
   async function loadEventsFromSupabase() {
     try {
-      if (
-        !window.supabase ||
-        !window.SUPABASE_URL ||
-        !window.SUPABASE_KEY
-      ) {
+      if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_KEY) {
         throw new Error("Configuração do Supabase não encontrada.");
       }
 
@@ -135,6 +127,11 @@
       const loadedEvents = [];
 
       for (const row of data || []) {
+        // Procura os dados antigos do mesmo evento para preservar informações.
+        const previous = demoEvents.find(
+          e => e.titulo.trim().toLowerCase() === row.titulo.trim().toLowerCase()
+        );
+
         const { data: agenda, error: agendaError } = await db
           .from("programacao")
           .select("id,evento_id,horario,atividade,responsavel,ordem")
@@ -143,27 +140,47 @@
 
         if (agendaError) throw agendaError;
 
+        const databaseSchedule = (agenda || []).map(item => ({
+          horario: String(item.horario || "").slice(0, 5),
+          atividade: item.responsavel
+            ? `${item.atividade} — ${item.responsavel}`
+            : item.atividade
+        }));
+
         loadedEvents.push({
           id: String(row.id),
           titulo: row.titulo,
-          descricao: row.descricao || "",
-          categoria: "Evento escolar",
+          descricao: row.descricao || previous?.descricao || "",
+          categoria: previous?.categoria || "Evento escolar",
           data: row.data_evento,
-          horario_inicio: agenda?.[0]?.horario
-            ? String(agenda[0].horario).slice(0, 5)
-            : null,
-          local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
-          imagem_capa: row.imagem_capa || "",
+          horario_inicio:
+            databaseSchedule[0]?.horario ||
+            previous?.horario_inicio ||
+            null,
+          local: previous?.local ||
+            "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+          imagem_capa: row.imagem_capa || previous?.imagem_capa || "",
           estado: "publicado",
-          destaque: false,
-          cronograma: (agenda || []).map(item => ({
-            horario: String(item.horario || "").slice(0, 5),
-            atividade: item.responsavel
-              ? `${item.atividade} — ${item.responsavel}`
-              : item.atividade
-          })),
-          fotografias: []
+          destaque: previous?.destaque || false,
+
+          // Se o banco ainda não tiver horários, recupera o cronograma antigo.
+          cronograma: databaseSchedule.length
+            ? databaseSchedule
+            : (previous?.cronograma || []),
+
+          fotografias: previous?.fotografias || []
         });
+      }
+
+      // Mantém os eventos antigos que ainda não foram cadastrados no banco.
+      for (const demo of demoEvents) {
+        const alreadyExists = loadedEvents.some(
+          e => e.titulo.trim().toLowerCase() === demo.titulo.trim().toLowerCase()
+        );
+
+        if (!alreadyExists) {
+          loadedEvents.push(demo);
+        }
       }
 
       events = loadedEvents;
@@ -172,12 +189,12 @@
       renderAgenda();
       renderGallery();
 
-      console.log("Eventos carregados do Supabase:", events);
+      console.log("Eventos carregados:", events);
 
     } catch (error) {
       console.error("Erro ao carregar eventos do Supabase:", error);
 
-      // Mantém os eventos demonstrativos caso o banco não responda.
+      // Se a conexão falhar, mantém todos os eventos antigos.
       events = [...demoEvents];
       renderFeatured();
       renderAgenda();
@@ -187,11 +204,9 @@
 
   function coverMarkup(event, featured = false) {
     const url = safeUrl(event.imagem_capa);
-
     if (url) {
       return `<img src="${esc(url)}" alt="Imagem de ${esc(event.titulo)}" loading="lazy">`;
     }
-
     return photoPlaceholder(event.titulo);
   }
 
@@ -202,7 +217,6 @@
   function selectFeatured() {
     const list = publicEvents();
     const today = todayISO();
-
     const todays = list.filter(e => e.data === today);
 
     if (todays.length) {
@@ -471,7 +485,7 @@
     }
   });
 
-  // Primeiro mostra os eventos demonstrativos e depois tenta carregar os reais.
+  // Mostra os dados antigos imediatamente e depois sincroniza com o banco.
   renderFeatured();
   renderAgenda();
   renderGallery();
