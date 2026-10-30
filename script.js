@@ -3,6 +3,8 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
+  const BUCKET = "fotos-eventos";
+  const SCHOOL = "Colégio de Tempo Integral Filomena Pereira Rodrigues";
 
   const todayISO = () => {
     const d = new Date();
@@ -35,7 +37,6 @@
     }
   };
 
-  // Eventos que já estavam cadastrados no site.
   const demoEvents = [
     {
       id: "biomas-bahia-2026",
@@ -44,7 +45,7 @@
       categoria: "Meio ambiente",
       data: "2026-10-30",
       horario_inicio: "08:00",
-      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      local: SCHOOL,
       imagem_capa: "",
       estado: "publicado",
       destaque: true,
@@ -78,7 +79,7 @@
       categoria: "Saúde e conscientização",
       data: null,
       horario_inicio: null,
-      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      local: SCHOOL,
       imagem_capa: "",
       estado: "publicado",
       destaque: true,
@@ -92,7 +93,7 @@
       categoria: "Saúde e conscientização",
       data: null,
       horario_inicio: null,
-      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      local: SCHOOL,
       imagem_capa: "",
       estado: "publicado",
       destaque: false,
@@ -103,22 +104,76 @@
 
   let events = [...demoEvents];
   let db = null;
+  let currentUser = null;
+  let currentCoverUrl = "";
 
-  // Carrega os eventos do Supabase sem perder os dados demonstrativos.
+  // --------------------------------------------------
+  // SUPABASE
+  // --------------------------------------------------
+
+  function initializeSupabase() {
+    if (db) return db;
+
+    if (
+      !window.supabase ||
+      !window.SUPABASE_URL ||
+      !window.SUPABASE_KEY
+    ) {
+      throw new Error("A configuração do Supabase não foi encontrada. Confira o arquivo supabase-config.js.");
+    }
+
+    db = window.supabase.createClient(
+      window.SUPABASE_URL,
+      window.SUPABASE_KEY
+    );
+
+    return db;
+  }
+
+  function storagePublicUrl(path) {
+    if (!path) return "";
+    const { data } = db.storage.from(BUCKET).getPublicUrl(path);
+    return data?.publicUrl || "";
+  }
+
+  async function loadPhotosForEvents(eventList) {
+    const ids = eventList
+      .map(e => Number(e.id))
+      .filter(Number.isFinite);
+
+    if (!ids.length) return;
+
+    const { data, error } = await db
+      .from("fotos_eventos")
+      .select("id,evento_id,caminho,legenda,criado_em")
+      .in("evento_id", ids);
+
+    if (error) {
+      console.error("Não foi possível carregar os álbuns:", error);
+      return;
+    }
+
+    for (const event of eventList) {
+      if (!Number.isFinite(Number(event.id))) continue;
+
+      event.fotografias = (data || [])
+        .filter(photo => String(photo.evento_id) === String(event.id))
+        .map(photo => ({
+          id: photo.id,
+          caminho: photo.caminho,
+          url: storagePublicUrl(photo.caminho),
+          alt: photo.legenda || event.titulo
+        }));
+    }
+  }
+
   async function loadEventsFromSupabase() {
     try {
-      if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_KEY) {
-        throw new Error("Configuração do Supabase não encontrada.");
-      }
-
-      db = window.supabase.createClient(
-        window.SUPABASE_URL,
-        window.SUPABASE_KEY
-      );
+      initializeSupabase();
 
       const { data, error } = await db
         .from("eventos")
-        .select("id,titulo,descricao,data_evento,imagem_capa,publicado")
+        .select("id,titulo,descricao,data_evento,imagem_capa,publicado,categoria,local,horario_inicio,destaque")
         .eq("publicado", true)
         .order("data_evento", { ascending: true });
 
@@ -127,7 +182,6 @@
       const loadedEvents = [];
 
       for (const row of data || []) {
-        // Procura os dados antigos do mesmo evento para preservar informações.
         const previous = demoEvents.find(
           e => e.titulo.trim().toLowerCase() === row.titulo.trim().toLowerCase()
         );
@@ -151,58 +205,56 @@
           id: String(row.id),
           titulo: row.titulo,
           descricao: row.descricao || previous?.descricao || "",
-          categoria: previous?.categoria || "Evento escolar",
+          categoria: row.categoria || previous?.categoria || "Evento escolar",
           data: row.data_evento,
-          horario_inicio:
+          horario_inicio: String(row.horario_inicio || "").slice(0, 5) ||
             databaseSchedule[0]?.horario ||
             previous?.horario_inicio ||
             null,
-          local: previous?.local ||
-            "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+          local: row.local || previous?.local || SCHOOL,
           imagem_capa: row.imagem_capa || previous?.imagem_capa || "",
-          estado: "publicado",
-          destaque: previous?.destaque || false,
-
-          // Se o banco ainda não tiver horários, recupera o cronograma antigo.
+          estado: row.publicado ? "publicado" : "rascunho",
+          destaque: row.destaque ?? previous?.destaque ?? false,
           cronograma: databaseSchedule.length
             ? databaseSchedule
             : (previous?.cronograma || []),
-
-          fotografias: previous?.fotografias || []
+          fotografias: []
         });
       }
 
-      // Mantém os eventos antigos que ainda não foram cadastrados no banco.
       for (const demo of demoEvents) {
         const alreadyExists = loadedEvents.some(
           e => e.titulo.trim().toLowerCase() === demo.titulo.trim().toLowerCase()
         );
 
-        if (!alreadyExists) {
-          loadedEvents.push(demo);
-        }
+        if (!alreadyExists) loadedEvents.push({ ...demo });
       }
 
-      events = loadedEvents;
+      await loadPhotosForEvents(loadedEvents);
 
-      renderFeatured();
-      renderAgenda();
-      renderGallery();
+      events = loadedEvents;
+      renderAll();
 
       console.log("Eventos carregados:", events);
 
     } catch (error) {
       console.error("Erro ao carregar eventos do Supabase:", error);
-
-      // Se a conexão falhar, mantém todos os eventos antigos.
       events = [...demoEvents];
-      renderFeatured();
-      renderAgenda();
-      renderGallery();
+      renderAll();
     }
   }
 
-  function coverMarkup(event, featured = false) {
+  function renderAll() {
+    renderFeatured();
+    renderAgenda();
+    renderGallery();
+  }
+
+  // --------------------------------------------------
+  // EXIBIÇÃO PÚBLICA
+  // --------------------------------------------------
+
+  function coverMarkup(event) {
     const url = safeUrl(event.imagem_capa);
     if (url) {
       return `<img src="${esc(url)}" alt="Imagem de ${esc(event.titulo)}" loading="lazy">`;
@@ -257,7 +309,7 @@
 
     $("featuredEvent").innerHTML = `
       <article class="featured-card">
-        <div class="featured-art">${coverMarkup(e, true)}</div>
+        <div class="featured-art">${coverMarkup(e)}</div>
         <div class="featured-content">
           <span class="pill">${esc(selected.label)}</span>
           <h3>${esc(e.titulo)}</h3>
@@ -309,10 +361,6 @@
         <li>
           <time>${esc(e.horario_inicio || "Horário a confirmar")}</time>
           <p>${esc(e.titulo)}</p>
-        </li>
-        <li>
-          <time>Mais horários</time>
-          <p>O restante do cronograma será exibido quando for cadastrado.</p>
         </li>`;
 
     $("nextEvent").innerHTML = `
@@ -389,7 +437,7 @@
       : `<div class="empty-state">Nenhum evento encontrado para este filtro.</div>`;
   }
 
-  function openEvent(id) {
+  async function openEvent(id) {
     const e = events.find(item => String(item.id) === String(id));
     if (!e) return;
 
@@ -427,6 +475,399 @@
 
     $("eventDialog").showModal();
   }
+
+  // --------------------------------------------------
+  // LOGIN E AUTORIZAÇÃO DO ADMINISTRADOR
+  // --------------------------------------------------
+
+  function showMessage(element, message, isError = false) {
+    if (!element) return;
+    element.textContent = message;
+    element.classList.toggle("error", isError);
+    element.classList.toggle("success", !isError && Boolean(message));
+  }
+
+  async function checkAdministrator(user) {
+    const { data, error } = await db
+      .from("administradores")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = $("adminEmail").value.trim();
+    const password = $("adminPassword").value;
+    const button = $("loginSubmit");
+
+    showMessage($("loginError"), "");
+    button.disabled = true;
+    button.textContent = "Verificando…";
+
+    try {
+      initializeSupabase();
+
+      const { data, error } = await db.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      const user = data.user;
+      const authorized = await checkAdministrator(user);
+
+      if (!authorized) {
+        await db.auth.signOut();
+        throw new Error("Esta conta não tem autorização de administrador.");
+      }
+
+      currentUser = user;
+      $("loginDialog").close();
+      $("loginForm").reset();
+
+      await loadAdminEvents();
+      $("adminDialog").showModal();
+
+    } catch (error) {
+      console.error("Erro no login:", error);
+      showMessage(
+        $("loginError"),
+        error.message || "Não foi possível entrar. Confira seus dados.",
+        true
+      );
+    } finally {
+      button.disabled = false;
+      button.textContent = "Entrar no painel";
+    }
+  }
+
+  async function restoreSession() {
+    try {
+      initializeSupabase();
+
+      const { data } = await db.auth.getSession();
+      const user = data?.session?.user;
+
+      if (!user) return;
+
+      const authorized = await checkAdministrator(user);
+
+      if (authorized) {
+        currentUser = user;
+      } else {
+        await db.auth.signOut();
+      }
+    } catch (error) {
+      console.warn("Não foi possível restaurar a sessão:", error);
+    }
+  }
+
+  async function logout() {
+    try {
+      if (db) await db.auth.signOut();
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+
+    currentUser = null;
+    $("adminDialog").close();
+    $("loginDialog").close();
+    $("loginForm").reset();
+  }
+
+  // --------------------------------------------------
+  // PAINEL ADMINISTRATIVO
+  // --------------------------------------------------
+
+  function switchAdminTab(tab) {
+    const sections = {
+      events: "adminEventsSection",
+      eventForm: "adminEventFormSection",
+      photos: "adminPhotosSection"
+    };
+
+    Object.entries(sections).forEach(([key, id]) => {
+      $(id).hidden = key !== tab;
+    });
+
+    document.querySelectorAll("[data-admin-tab]").forEach(button => {
+      button.classList.toggle("active", button.dataset.adminTab === tab);
+    });
+  }
+
+  async function loadAdminEvents() {
+    try {
+      initializeSupabase();
+
+      const { data, error } = await db
+        .from("eventos")
+        .select("id,titulo,descricao,data_evento,imagem_capa,publicado,categoria,local,horario_inicio,destaque")
+        .order("data_evento", { ascending: false });
+
+      if (error) throw error;
+
+      renderAdminEvents(data || []);
+      updatePhotoEventOptions(data || []);
+
+    } catch (error) {
+      console.error("Erro ao carregar painel:", error);
+      $("adminEventsList").innerHTML =
+        `<p class="admin-message error">${esc(error.message)}</p>`;
+    }
+  }
+
+  function renderAdminEvents(list) {
+    if (!list.length) {
+      $("adminEventsList").innerHTML =
+        `<p class="empty-state">Ainda não há eventos cadastrados no banco de dados.</p>`;
+      return;
+    }
+
+    $("adminEventsList").innerHTML = list.map(event => `
+      <article class="admin-event-row">
+        <div>
+          <strong>${esc(event.titulo)}</strong>
+          <p>${formatDate(event.data_evento)} · ${esc(event.categoria || "Evento escolar")}</p>
+          <span class="admin-status">${event.publicado ? "Publicado" : "Rascunho"}</span>
+        </div>
+        <button class="button button-small" type="button" data-edit-event="${event.id}">
+          Editar
+        </button>
+      </article>
+    `).join("");
+  }
+
+  function updatePhotoEventOptions(list) {
+    $("photoEventSelect").innerHTML =
+      `<option value="">Selecione um evento</option>` +
+      list.map(event => `
+        <option value="${event.id}">${esc(event.titulo)}</option>
+      `).join("");
+  }
+
+  function resetEventForm() {
+    $("eventForm").reset();
+    $("eventId").value = "";
+    $("adminFormTitle").textContent = "Cadastrar evento";
+    $("eventSaveButton").textContent = "Salvar evento";
+    currentCoverUrl = "";
+    showMessage($("eventFormMessage"), "");
+  }
+
+  async function editEvent(id) {
+    try {
+      const { data, error } = await db
+        .from("eventos")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      $("eventId").value = data.id;
+      $("eventTitle").value = data.titulo || "";
+      $("eventDescription").value = data.descricao || "";
+      $("eventDate").value = data.data_evento || "";
+      $("eventTime").value = String(data.horario_inicio || "").slice(0, 5);
+      $("eventCategory").value = data.categoria || "";
+      $("eventLocation").value = data.local || "";
+      $("eventFeatured").checked = Boolean(data.destaque);
+      $("eventPublished").checked = Boolean(data.publicado);
+
+      currentCoverUrl = data.imagem_capa || "";
+
+      $("adminFormTitle").textContent = "Editar evento";
+      $("eventSaveButton").textContent = "Salvar alterações";
+
+      showMessage($("eventFormMessage"), "");
+      switchAdminTab("eventForm");
+
+    } catch (error) {
+      alert("Não foi possível abrir o evento: " + error.message);
+    }
+  }
+
+  async function uploadCover(file, eventId) {
+    if (!file) return currentCoverUrl;
+
+    if (!file.type.startsWith("image/")) {
+      throw new Error("O arquivo da capa precisa ser uma imagem.");
+    }
+
+    const extension = file.name.split(".").pop().toLowerCase();
+    const path = `capas/${eventId}-${Date.now()}.${extension}`;
+
+    const { error } = await db.storage
+      .from(BUCKET)
+      .upload(path, file, { upsert: false });
+
+    if (error) throw error;
+
+    return storagePublicUrl(path);
+  }
+
+  async function saveEvent(event) {
+    event.preventDefault();
+
+    const button = $("eventSaveButton");
+    button.disabled = true;
+    button.textContent = "Salvando…";
+    showMessage($("eventFormMessage"), "");
+
+    try {
+      initializeSupabase();
+
+      if (!currentUser) {
+        throw new Error("Sua sessão não está ativa. Entre novamente.");
+      }
+
+      const id = $("eventId").value;
+      const file = $("eventCover").files[0];
+
+      const values = {
+        titulo: $("eventTitle").value.trim(),
+        descricao: $("eventDescription").value.trim(),
+        data_evento: $("eventDate").value,
+        categoria: $("eventCategory").value.trim() || "Evento escolar",
+        local: $("eventLocation").value.trim() || SCHOOL,
+        horario_inicio: $("eventTime").value || null,
+        publicado: $("eventPublished").checked,
+        destaque: $("eventFeatured").checked,
+        atualizado_em: new Date().toISOString()
+      };
+
+      if (!values.titulo || !values.data_evento) {
+        throw new Error("Preencha o título e a data do evento.");
+      }
+
+      let eventId = id;
+
+      if (id) {
+        const { error } = await db
+          .from("eventos")
+          .update(values)
+          .eq("id", id);
+
+        if (error) throw error;
+      } else {
+        values.criado_por = currentUser.id;
+
+        const { data, error } = await db
+          .from("eventos")
+          .insert(values)
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        eventId = data.id;
+      }
+
+      if (file) {
+        const coverUrl = await uploadCover(file, eventId);
+
+        const { error } = await db
+          .from("eventos")
+          .update({
+            imagem_capa: coverUrl,
+            atualizado_em: new Date().toISOString()
+          })
+          .eq("id", eventId);
+
+        if (error) throw error;
+      }
+
+      showMessage($("eventFormMessage"), "Evento salvo com sucesso!");
+      resetEventForm();
+
+      await loadAdminEvents();
+      await loadEventsFromSupabase();
+      switchAdminTab("events");
+
+    } catch (error) {
+      console.error("Erro ao salvar evento:", error);
+      showMessage($("eventFormMessage"), error.message, true);
+    } finally {
+      button.disabled = false;
+      button.textContent = $("eventId").value
+        ? "Salvar alterações"
+        : "Salvar evento";
+    }
+  }
+
+  // --------------------------------------------------
+  // ENVIO DE FOTOS PARA O ÁLBUM
+  // --------------------------------------------------
+
+  async function uploadPhotos(event) {
+    event.preventDefault();
+
+    const button = $("photoUploadButton");
+    const eventId = $("photoEventSelect").value;
+    const files = Array.from($("eventPhotos").files || []);
+    const caption = $("photoCaption").value.trim();
+
+    showMessage($("photoFormMessage"), "");
+
+    if (!eventId || !files.length) {
+      showMessage($("photoFormMessage"), "Selecione um evento e pelo menos uma foto.", true);
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Enviando fotos…";
+
+    try {
+      initializeSupabase();
+
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          throw new Error(`O arquivo ${file.name} não é uma imagem.`);
+        }
+
+        const extension = file.name.split(".").pop().toLowerCase();
+        const path = `albuns/${eventId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+
+        const { error: uploadError } = await db.storage
+          .from(BUCKET)
+          .upload(path, file, { upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { error: insertError } = await db
+          .from("fotos_eventos")
+          .insert({
+            evento_id: Number(eventId),
+            caminho: path,
+            legenda: caption || file.name
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      $("photoForm").reset();
+      showMessage($("photoFormMessage"), "Fotos enviadas com sucesso!");
+
+      await loadEventsFromSupabase();
+      await loadAdminEvents();
+
+    } catch (error) {
+      console.error("Erro ao enviar fotos:", error);
+      showMessage($("photoFormMessage"), error.message, true);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Enviar fotos";
+    }
+  }
+
+  // --------------------------------------------------
+  // TEMA E EVENTOS DE INTERFACE
+  // --------------------------------------------------
 
   function setTheme(theme) {
     const dark = theme === "dark";
@@ -468,6 +909,23 @@
     $("menuToggle").setAttribute("aria-expanded", String(open));
   });
 
+  $("loginForm").addEventListener("submit", handleLogin);
+  $("eventForm").addEventListener("submit", saveEvent);
+  $("photoForm").addEventListener("submit", uploadPhotos);
+  $("adminLogout").addEventListener("click", logout);
+
+  $("eventCancelButton").addEventListener("click", () => {
+    resetEventForm();
+    switchAdminTab("events");
+  });
+
+  document.querySelectorAll("[data-admin-tab]").forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.dataset.adminTab === "eventForm") resetEventForm();
+      switchAdminTab(button.dataset.adminTab);
+    });
+  });
+
   document.addEventListener("click", event => {
     const opener = event.target.closest("[data-open-event]");
     if (opener) openEvent(opener.dataset.openEvent);
@@ -479,16 +937,21 @@
       $("loginDialog").showModal();
     }
 
+    const editButton = event.target.closest("[data-edit-event]");
+    if (editButton) editEvent(editButton.dataset.editEvent);
+
     if (event.target.closest("#mainNav a")) {
       $("mainNav").classList.remove("open");
       $("menuToggle").setAttribute("aria-expanded", "false");
     }
   });
 
-  // Mostra os dados antigos imediatamente e depois sincroniza com o banco.
-  renderFeatured();
-  renderAgenda();
-  renderGallery();
+  // --------------------------------------------------
+  // INICIALIZAÇÃO
+  // --------------------------------------------------
+
+  renderAll();
 
   loadEventsFromSupabase();
+  restoreSession();
 })();
