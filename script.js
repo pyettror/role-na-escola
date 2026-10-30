@@ -1,4 +1,3 @@
-```javascript
 (() => {
   "use strict";
 
@@ -149,15 +148,22 @@
       const loaded = [];
 
       for (const row of data || []) {
-        const { data: agenda, error: agendaError } = await db
-          .from("programacao")
-          .select("id,evento_id,horario,atividade,responsavel,ordem")
-          .eq("evento_id", row.id)
-          .order("ordem", { ascending: true });
+        let agenda = [];
 
-        if (agendaError) throw agendaError;
+        try {
+          const { data: scheduleData, error: agendaError } = await db
+            .from("programacao")
+            .select("id,evento_id,horario,atividade,responsavel,ordem")
+            .eq("evento_id", row.id)
+            .order("ordem", { ascending: true });
 
-        const schedule = (agenda || []).map(item => ({
+          if (agendaError) throw agendaError;
+          agenda = scheduleData || [];
+        } catch (scheduleError) {
+          console.warn(`Não foi possível carregar a programação do evento ${row.id}:`, scheduleError);
+        }
+
+        const schedule = agenda.map(item => ({
           horario: String(item.horario || "").slice(0, 5),
           atividade: item.responsavel
             ? `${item.atividade} — ${item.responsavel}`
@@ -1154,4 +1160,3 @@
   loadEventsFromSupabase();
   restoreSession();
 })();
-```
