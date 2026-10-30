@@ -1,157 +1,480 @@
+
 (() => {
   "use strict";
+
   const $ = (id) => document.getElementById(id);
+
   const todayISO = () => {
     const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+
   const formatDate = (date) => {
     if (!date) return "Data a confirmar";
-    const [y,m,d] = date.split("-");
+    const [y, m, d] = date.split("-");
     return `${d}/${m}/${y}`;
   };
-  const monthName = (date) => date ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR",{month:"short"}).replace(".","") : "";
-  const photoPlaceholder = (title) => `<div class="featured-placeholder"><span>ROLÊ NA ESCOLA<br><br>${esc(title).slice(0,70)}</span></div>`;
+
+  const monthName = (date) => date
+    ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+    : "";
+
+  const photoPlaceholder = (title) =>
+    `<div class="featured-placeholder"><span>ROLÊ NA ESCOLA<br><br>${esc(title).slice(0, 70)}</span></div>`;
+
   const safeUrl = (value) => {
-    try { const u = new URL(value); return ["https:","http:"].includes(u.protocol) ? u.href : ""; }
-    catch { return ""; }
+    try {
+      const u = new URL(value);
+      return ["https:", "http:"].includes(u.protocol) ? u.href : "";
+    } catch {
+      return "";
+    }
   };
 
-  // Eventos demonstrativos. As datas ficam vazias até serem confirmadas pela equipe.
-  // Para inserir cronogramas reais, inclua itens em "cronograma" com horário e atividade.
+  // Eventos demonstrativos usados como alternativa caso a conexão falhe.
   const demoEvents = [
     {
-      id:"biomas-bahia-2026", titulo:"Biomas da Bahia — O que sobrará para o futuro?",
-      descricao:"Evento escolar dedicado à reflexão sobre os biomas da Bahia, a preservação ambiental e o futuro. Confira a programação completa das atividades.",
-      categoria:"Meio ambiente", data:"2026-10-30", horario_inicio:"08:00", local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
-      imagem_capa:"", estado:"publicado", destaque:true,
-      cronograma:[
-        {horario:"08:00", atividade:"Abertura oficial — Jéssica"},
-        {horario:"08:10", atividade:"Fala da diretoria — Bia"},
-        {horario:"08:20", atividade:"Fala dos estudantes — Says Havalos"},
-        {horario:"08:30", atividade:"Palestra — Biólogo Ermersson Douglas"},
-        {horario:"09:10", atividade:"Intervalo"},
-        {horario:"09:30", atividade:"Fim do intervalo"},
-        {horario:"09:30", atividade:"Palestra — Químico Eldo Gomes"},
-        {horario:"10:00", atividade:"Desfile com matérias recicláveis — 2° B"},
-        {horario:"10:20", atividade:"Abertura das salas temáticas — Yasmin"},
-        {horario:"11:05", atividade:"Exposição de materiais matemáticos recicláveis — 3° A"},
-        {horario:"11:20", atividade:"Sala temática: queimadas — 3° B"},
-        {horario:"11:35", atividade:"Jogos matemáticos — 1° A com Edineia"},
-        {horario:"11:50", atividade:"Jogos matemáticos — 2° A com Edineia"},
-        {horario:"11:50", atividade:"Exposição de maquetes químicas — 2° B, com Bonifácio"},
-        {horario:"11:50", atividade:"Paródia — 2° A, com Eliene"},
-        {horario:"12:00", atividade:"Intervalo"},
-        {horario:"13:00", atividade:"Fim do intervalo"},
-        {horario:"13:00", atividade:"Oficina de fotografia — Natan"},
-        {horario:"13:00", atividade:"Oficina de bem-estar / meio ambiente / Sabonete artesanal — responsável a confirmar"}
-      ], fotografias:[]
+      id: "biomas-bahia-2026",
+      titulo: "Biomas da Bahia — O que sobrará para o futuro?",
+      descricao: "Evento escolar dedicado à reflexão sobre os biomas da Bahia, a preservação ambiental e o futuro. Confira a programação completa das atividades.",
+      categoria: "Meio ambiente",
+      data: "2026-10-30",
+      horario_inicio: "08:00",
+      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa: "",
+      estado: "publicado",
+      destaque: true,
+      cronograma: [
+        { horario: "08:00", atividade: "Abertura oficial — Jéssica" },
+        { horario: "08:10", atividade: "Fala da diretoria — Bia" },
+        { horario: "08:20", atividade: "Fala dos estudantes — Says Havalos" },
+        { horario: "08:30", atividade: "Palestra — Biólogo Ermersson Douglas" },
+        { horario: "09:10", atividade: "Intervalo" },
+        { horario: "09:30", atividade: "Fim do intervalo" },
+        { horario: "09:30", atividade: "Palestra — Químico Eldo Gomes" },
+        { horario: "10:00", atividade: "Desfile com matérias recicláveis — 2° B" },
+        { horario: "10:20", atividade: "Abertura das salas temáticas — Yasmin" },
+        { horario: "11:05", atividade: "Exposição de materiais matemáticos recicláveis — 3° A" },
+        { horario: "11:20", atividade: "Sala temática: queimadas — 3° B" },
+        { horario: "11:35", atividade: "Jogos matemáticos — 1° A com Edineia" },
+        { horario: "11:50", atividade: "Jogos matemáticos — 2° A com Edineia" },
+        { horario: "11:50", atividade: "Exposição de maquetes químicas — 2° B, com Bonifácio" },
+        { horario: "11:50", atividade: "Paródia — 2° A, com Eliene" },
+        { horario: "12:00", atividade: "Intervalo" },
+        { horario: "13:00", atividade: "Fim do intervalo" },
+        { horario: "13:00", atividade: "Oficina de fotografia — Natan" },
+        { horario: "13:00", atividade: "Oficina de bem-estar / meio ambiente / Sabonete artesanal — responsável a confirmar" }
+      ],
+      fotografias: []
     },
     {
-      id:"demo-ist", titulo:"Conversa sobre doenças sexualmente transmissíveis",
-      descricao:"Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.",
-      categoria:"Saúde e conscientização", data:null, horario_inicio:null, local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
-      imagem_capa:"", estado:"publicado", destaque:true, cronograma:[], fotografias:[]
+      id: "demo-ist",
+      titulo: "Conversa sobre doenças sexualmente transmissíveis",
+      descricao: "Registro de uma atividade educativa dedicada à prevenção das infecções sexualmente transmissíveis (ISTs), à conscientização sobre saúde sexual, à importância da informação confiável e às formas de prevenção.",
+      categoria: "Saúde e conscientização",
+      data: null,
+      horario_inicio: null,
+      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa: "",
+      estado: "publicado",
+      destaque: true,
+      cronograma: [],
+      fotografias: []
     },
     {
-      id:"demo-vape", titulo:"Os malefícios do uso do cigarro eletrônico",
-      descricao:"Registro de uma atividade educativa sobre os riscos associados ao uso de cigarros eletrônicos, seus possíveis impactos na saúde, a dependência de nicotina e a importância da prevenção e da conscientização entre os jovens.",
-      categoria:"Saúde e conscientização", data:null, horario_inicio:null, local:"Colégio de Tempo Integral Filomena Pereira Rodrigues",
-      imagem_capa:"", estado:"publicado", destaque:false, cronograma:[], fotografias:[]
+      id: "demo-vape",
+      titulo: "Os malefícios do uso do cigarro eletrônico",
+      descricao: "Registro de uma atividade educativa sobre os riscos associados ao uso de cigarros eletrônicos, seus possíveis impactos na saúde, a dependência de nicotina e a importância da prevenção e da conscientização entre os jovens.",
+      categoria: "Saúde e conscientização",
+      data: null,
+      horario_inicio: null,
+      local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+      imagem_capa: "",
+      estado: "publicado",
+      destaque: false,
+      cronograma: [],
+      fotografias: []
     }
   ];
-  let events = [...demoEvents];
 
-  function coverMarkup(event, featured=false) {
+  let events = [...demoEvents];
+  let db = null;
+
+  // Conecta ao Supabase e carrega os eventos publicados.
+  async function loadEventsFromSupabase() {
+    try {
+      if (
+        !window.supabase ||
+        !window.SUPABASE_URL ||
+        !window.SUPABASE_KEY
+      ) {
+        throw new Error("Configuração do Supabase não encontrada.");
+      }
+
+      db = window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_KEY
+      );
+
+      const { data, error } = await db
+        .from("eventos")
+        .select("id,titulo,descricao,data_evento,imagem_capa,publicado")
+        .eq("publicado", true)
+        .order("data_evento", { ascending: true });
+
+      if (error) throw error;
+
+      const loadedEvents = [];
+
+      for (const row of data || []) {
+        const { data: agenda, error: agendaError } = await db
+          .from("programacao")
+          .select("id,evento_id,horario,atividade,responsavel,ordem")
+          .eq("evento_id", row.id)
+          .order("ordem", { ascending: true });
+
+        if (agendaError) throw agendaError;
+
+        loadedEvents.push({
+          id: String(row.id),
+          titulo: row.titulo,
+          descricao: row.descricao || "",
+          categoria: "Evento escolar",
+          data: row.data_evento,
+          horario_inicio: agenda?.[0]?.horario
+            ? String(agenda[0].horario).slice(0, 5)
+            : null,
+          local: "Colégio de Tempo Integral Filomena Pereira Rodrigues",
+          imagem_capa: row.imagem_capa || "",
+          estado: "publicado",
+          destaque: false,
+          cronograma: (agenda || []).map(item => ({
+            horario: String(item.horario || "").slice(0, 5),
+            atividade: item.responsavel
+              ? `${item.atividade} — ${item.responsavel}`
+              : item.atividade
+          })),
+          fotografias: []
+        });
+      }
+
+      events = loadedEvents;
+
+      renderFeatured();
+      renderAgenda();
+      renderGallery();
+
+      console.log("Eventos carregados do Supabase:", events);
+
+    } catch (error) {
+      console.error("Erro ao carregar eventos do Supabase:", error);
+
+      // Mantém os eventos demonstrativos caso o banco não responda.
+      events = [...demoEvents];
+      renderFeatured();
+      renderAgenda();
+      renderGallery();
+    }
+  }
+
+  function coverMarkup(event, featured = false) {
     const url = safeUrl(event.imagem_capa);
-    if (url) return `<img src="${esc(url)}" alt="Imagem de ${esc(event.titulo)}" loading="lazy">`;
+
+    if (url) {
+      return `<img src="${esc(url)}" alt="Imagem de ${esc(event.titulo)}" loading="lazy">`;
+    }
+
     return photoPlaceholder(event.titulo);
   }
-  function publicEvents() { return events.filter(e => e.estado === "publicado"); }
-  function selectFeatured() {
-    const list = publicEvents(), today = todayISO();
-    const todays = list.filter(e => e.data === today);
-    if (todays.length) return {event: todays.find(e => e.destaque) || todays[0], label:"Acontecendo hoje"};
-    const upcoming = list.filter(e => e.data && e.data > today).sort((a,b) => a.data.localeCompare(b.data));
-    if (upcoming.length) return {event:upcoming[0],label:"Próximo evento"};
-    const dated = list.filter(e => e.data).sort((a,b) => b.data.localeCompare(a.data));
-    return {event:list.find(e=>e.destaque) || dated[0] || list[0],label:"Registro em destaque"};
+
+  function publicEvents() {
+    return events.filter(e => e.estado === "publicado");
   }
+
+  function selectFeatured() {
+    const list = publicEvents();
+    const today = todayISO();
+
+    const todays = list.filter(e => e.data === today);
+
+    if (todays.length) {
+      return {
+        event: todays.find(e => e.destaque) || todays[0],
+        label: "Acontecendo hoje"
+      };
+    }
+
+    const upcoming = list
+      .filter(e => e.data && e.data > today)
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    if (upcoming.length) {
+      return { event: upcoming[0], label: "Próximo evento" };
+    }
+
+    const dated = list
+      .filter(e => e.data)
+      .sort((a, b) => b.data.localeCompare(a.data));
+
+    return {
+      event: list.find(e => e.destaque) || dated[0] || list[0],
+      label: "Registro em destaque"
+    };
+  }
+
   function renderFeatured() {
     const selected = selectFeatured();
-    if (!selected) { $("featuredEvent").innerHTML = `<div class="empty-state">Ainda não há eventos publicados.</div>`; return; }
+
+    if (!selected) {
+      $("featuredEvent").innerHTML =
+        `<div class="empty-state">Ainda não há eventos publicados.</div>`;
+      return;
+    }
+
     const e = selected.event;
-    $("featuredEvent").innerHTML = `<article class="featured-card"><div class="featured-art">${coverMarkup(e,true)}</div><div class="featured-content"><span class="pill">${esc(selected.label)}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao)}</p><div class="meta-row"><span>◷ ${formatDate(e.data)}</span><span>⌖ ${esc(e.local || "Local a confirmar")}</span></div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver cobertura <span>→</span></button></div></article>`;
+
+    $("featuredEvent").innerHTML = `
+      <article class="featured-card">
+        <div class="featured-art">${coverMarkup(e, true)}</div>
+        <div class="featured-content">
+          <span class="pill">${esc(selected.label)}</span>
+          <h3>${esc(e.titulo)}</h3>
+          <p>${esc(e.descricao)}</p>
+          <div class="meta-row">
+            <span>◷ ${formatDate(e.data)}</span>
+            <span>⌖ ${esc(e.local || "Local a confirmar")}</span>
+          </div>
+          <button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">
+            Ver cobertura <span>→</span>
+          </button>
+        </div>
+      </article>`;
   }
+
   function renderAgenda() {
     const today = todayISO();
-    const upcoming = publicEvents().filter(e=>e.data && e.data >= today).sort((a,b)=>a.data.localeCompare(b.data) || (a.horario_inicio||"").localeCompare(b.horario_inicio||""));
+
+    const upcoming = publicEvents()
+      .filter(e => e.data && e.data >= today)
+      .sort((a, b) =>
+        a.data.localeCompare(b.data) ||
+        (a.horario_inicio || "").localeCompare(b.horario_inicio || "")
+      );
+
     if (!upcoming.length) {
-      $("nextEvent").innerHTML = `<div class="empty-state"><strong>Nenhum evento futuro cadastrado ainda.</strong><br>Quando a equipe confirmar uma data, o próximo evento e o cronograma aparecerão automaticamente aqui.</div>`;
+      $("nextEvent").innerHTML = `
+        <div class="empty-state">
+          <strong>Nenhum evento futuro cadastrado ainda.</strong><br>
+          Quando a equipe confirmar uma data, o próximo evento e o cronograma aparecerão automaticamente aqui.
+        </div>`;
       $("otherUpcoming").innerHTML = "";
       return;
     }
+
     const e = upcoming[0];
     const agenda = Array.isArray(e.cronograma) ? e.cronograma : [];
+
     const timeline = agenda.length
-      ? agenda.slice().sort((a,b)=>(a.horario||"").localeCompare(b.horario||"")).map(item=>`<li><time>${esc(item.horario || "Horário a confirmar")}</time><p>${esc(item.atividade || "Atividade a confirmar")}</p></li>`).join("")
-      : `<li><time>${esc(e.horario_inicio || "Horário a confirmar")}</time><p>${esc(e.titulo)}</p></li><li><time>Mais horários</time><p>O restante do cronograma será exibido quando for cadastrado.</p></li>`;
-    $("nextEvent").innerHTML = `<article class="next-event-card"><div class="next-main"><span class="pill">${e.data===today ? "Acontecendo hoje" : "Próximo compromisso"}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao)}</p><div class="event-facts"><span class="fact">▣ ${formatDate(e.data)}</span><span class="fact">◷ ${esc(e.horario_inicio || "Horário a confirmar")}</span><span class="fact">⌖ ${esc(e.local || "Local a confirmar")}</span></div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver detalhes <span>→</span></button></div><aside class="timeline-panel"><h4>⌁ Cronograma do evento</h4><ol class="timeline">${timeline}</ol></aside></article>`;
-    $("otherUpcoming").innerHTML = upcoming.slice(1).map(item=>`<article class="upcoming-row"><div class="date-box"><strong>${item.data.slice(8,10)}</strong><span>${monthName(item.data)}</span></div><div><h4>${esc(item.titulo)}</h4><p>${formatDate(item.data)} · ${esc(item.horario_inicio || "Horário a confirmar")}</p></div></article>`).join("");
+      ? agenda.slice()
+          .sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
+          .map(item => `
+            <li>
+              <time>${esc(item.horario || "Horário a confirmar")}</time>
+              <p>${esc(item.atividade || "Atividade a confirmar")}</p>
+            </li>
+          `).join("")
+      : `
+        <li>
+          <time>${esc(e.horario_inicio || "Horário a confirmar")}</time>
+          <p>${esc(e.titulo)}</p>
+        </li>
+        <li>
+          <time>Mais horários</time>
+          <p>O restante do cronograma será exibido quando for cadastrado.</p>
+        </li>`;
+
+    $("nextEvent").innerHTML = `
+      <article class="next-event-card">
+        <div class="next-main">
+          <span class="pill">${e.data === today ? "Acontecendo hoje" : "Próximo compromisso"}</span>
+          <h3>${esc(e.titulo)}</h3>
+          <p>${esc(e.descricao)}</p>
+          <div class="event-facts">
+            <span class="fact">▣ ${formatDate(e.data)}</span>
+            <span class="fact">◷ ${esc(e.horario_inicio || "Horário a confirmar")}</span>
+            <span class="fact">⌖ ${esc(e.local || "Local a confirmar")}</span>
+          </div>
+          <button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">
+            Ver detalhes <span>→</span>
+          </button>
+        </div>
+        <aside class="timeline-panel">
+          <h4>⌁ Cronograma do evento</h4>
+          <ol class="timeline">${timeline}</ol>
+        </aside>
+      </article>`;
+
+    $("otherUpcoming").innerHTML = upcoming.slice(1).map(item => `
+      <article class="upcoming-row">
+        <div class="date-box">
+          <strong>${item.data.slice(8, 10)}</strong>
+          <span>${monthName(item.data)}</span>
+        </div>
+        <div>
+          <h4>${esc(item.titulo)}</h4>
+          <p>${formatDate(item.data)} · ${esc(item.horario_inicio || "Horário a confirmar")}</p>
+        </div>
+      </article>
+    `).join("");
   }
+
   function renderGallery() {
     const previous = $("yearFilter").value;
-    const years = [...new Set(publicEvents().map(e=>e.data ? e.data.slice(0,4) : null).filter(Boolean))].sort().reverse();
-    $("yearFilter").innerHTML = `<option value="todos">Todos os anos</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join("");
+
+    const years = [...new Set(
+      publicEvents()
+        .map(e => e.data ? e.data.slice(0, 4) : null)
+        .filter(Boolean)
+    )].sort().reverse();
+
+    $("yearFilter").innerHTML =
+      `<option value="todos">Todos os anos</option>` +
+      years.map(y => `<option value="${y}">${y}</option>`).join("");
+
     $("yearFilter").value = years.includes(previous) ? previous : "todos";
+
     const chosen = $("yearFilter").value;
-    const list = publicEvents().filter(e=>chosen==="todos" || (e.data||"").startsWith(chosen));
-    $("eventGrid").innerHTML = list.length ? list.map(e=>`<article class="event-card"><div class="event-art">${coverMarkup(e)}</div><div class="event-body"><span class="pill">${esc(e.categoria || "Evento escolar")}</span><h3>${esc(e.titulo)}</h3><p>${esc(e.descricao.length>125 ? e.descricao.slice(0,125)+"…" : e.descricao)}</p><div class="event-date">▣ ${formatDate(e.data)}</div><button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">Ver cobertura <span>→</span></button></div></article>`).join("") : `<div class="empty-state">Nenhum evento encontrado para este filtro.</div>`;
+
+    const list = publicEvents().filter(e =>
+      chosen === "todos" || (e.data || "").startsWith(chosen)
+    );
+
+    $("eventGrid").innerHTML = list.length
+      ? list.map(e => `
+          <article class="event-card">
+            <div class="event-art">${coverMarkup(e)}</div>
+            <div class="event-body">
+              <span class="pill">${esc(e.categoria || "Evento escolar")}</span>
+              <h3>${esc(e.titulo)}</h3>
+              <p>${esc(e.descricao.length > 125 ? e.descricao.slice(0, 125) + "…" : e.descricao)}</p>
+              <div class="event-date">▣ ${formatDate(e.data)}</div>
+              <button class="button button-primary button-small" type="button" data-open-event="${esc(e.id)}">
+                Ver cobertura <span>→</span>
+              </button>
+            </div>
+          </article>
+        `).join("")
+      : `<div class="empty-state">Nenhum evento encontrado para este filtro.</div>`;
   }
+
   function openEvent(id) {
-    const e = events.find(item=>String(item.id)===String(id));
+    const e = events.find(item => String(item.id) === String(id));
     if (!e) return;
+
     const photos = Array.isArray(e.fotografias) ? e.fotografias : [];
-    const photoHtml = photos.length ? `<div class="modal-photos">${photos.map(p=>{const u=safeUrl(p.url);return u?`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="${esc(p.alt||e.titulo)}" loading="lazy"></a>`:"";}).join("")}</div>` : `<p>As fotografias deste evento serão adicionadas pela equipe.</p>`;
-    const timeline = Array.isArray(e.cronograma) && e.cronograma.length ? `<h3>Cronograma</h3><ol class="timeline">${e.cronograma.map(x=>`<li><time>${esc(x.horario||"A confirmar")}</time><p>${esc(x.atividade||"Atividade")}</p></li>`).join("")}</ol>` : "";
-    $("eventDetails").innerHTML = `<span class="pill">${esc(e.categoria||"Evento escolar")}</span><h2>${esc(e.titulo)}</h2><p>▣ ${formatDate(e.data)}　⌖ ${esc(e.local||"Local a confirmar")}</p>${safeUrl(e.imagem_capa)?`<img class="modal-cover" src="${esc(safeUrl(e.imagem_capa))}" alt="${esc(e.titulo)}">`:""}<p>${esc(e.descricao)}</p>${timeline}<h3>Álbum fotográfico</h3>${photoHtml}`;
+
+    const photoHtml = photos.length
+      ? `<div class="modal-photos">${photos.map(p => {
+          const u = safeUrl(p.url);
+          return u
+            ? `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="${esc(p.alt || e.titulo)}" loading="lazy"></a>`
+            : "";
+        }).join("")}</div>`
+      : `<p>As fotografias deste evento serão adicionadas pela equipe.</p>`;
+
+    const timeline = Array.isArray(e.cronograma) && e.cronograma.length
+      ? `<h3>Cronograma</h3><ol class="timeline">${e.cronograma.map(x => `
+          <li>
+            <time>${esc(x.horario || "A confirmar")}</time>
+            <p>${esc(x.atividade || "Atividade")}</p>
+          </li>
+        `).join("")}</ol>`
+      : "";
+
+    $("eventDetails").innerHTML = `
+      <span class="pill">${esc(e.categoria || "Evento escolar")}</span>
+      <h2>${esc(e.titulo)}</h2>
+      <p>▣ ${formatDate(e.data)}　⌖ ${esc(e.local || "Local a confirmar")}</p>
+      ${safeUrl(e.imagem_capa)
+        ? `<img class="modal-cover" src="${esc(safeUrl(e.imagem_capa))}" alt="${esc(e.titulo)}">`
+        : ""}
+      <p>${esc(e.descricao)}</p>
+      ${timeline}
+      <h3>Álbum fotográfico</h3>
+      ${photoHtml}`;
+
     $("eventDialog").showModal();
   }
+
   function setTheme(theme) {
     const dark = theme === "dark";
+
     document.body.classList.toggle("dark", dark);
     $("themeIcon").textContent = dark ? "☀" : "☾";
     $("themeLabel").textContent = dark ? "Modo claro" : "Modo escuro";
-    $("themeToggle").setAttribute("aria-label", dark ? "Ativar modo claro" : "Ativar modo escuro");
-    document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#0b1220" : "#174ea6");
+    $("themeToggle").setAttribute(
+      "aria-label",
+      dark ? "Ativar modo claro" : "Ativar modo escuro"
+    );
+
+    document.querySelector('meta[name="theme-color"]')
+      .setAttribute("content", dark ? "#0b1220" : "#174ea6");
   }
+
   let initialTheme = "light";
-  try { initialTheme = localStorage.getItem("role-na-escola-theme") || "light"; } catch {}
+
+  try {
+    initialTheme = localStorage.getItem("role-na-escola-theme") || "light";
+  } catch {}
+
   setTheme(initialTheme === "dark" ? "dark" : "light");
+
   $("themeToggle").addEventListener("click", () => {
     const next = document.body.classList.contains("dark") ? "light" : "dark";
     setTheme(next);
-    try { localStorage.setItem("role-na-escola-theme", next); } catch {}
+
+    try {
+      localStorage.setItem("role-na-escola-theme", next);
+    } catch {}
   });
+
   $("yearFilter").addEventListener("change", renderGallery);
+
   $("menuToggle").addEventListener("click", () => {
-    const nav = $("mainNav"), open = nav.classList.toggle("open");
+    const nav = $("mainNav");
+    const open = nav.classList.toggle("open");
     $("menuToggle").setAttribute("aria-expanded", String(open));
   });
+
   document.addEventListener("click", event => {
     const opener = event.target.closest("[data-open-event]");
     if (opener) openEvent(opener.dataset.openEvent);
+
     const closer = event.target.closest("[data-close]");
     if (closer) $(closer.dataset.close).close();
-    if (event.target.id === "teamLogin" || event.target.id === "footerLogin") $("loginDialog").showModal();
+
+    if (event.target.id === "teamLogin" || event.target.id === "footerLogin") {
+      $("loginDialog").showModal();
+    }
+
     if (event.target.closest("#mainNav a")) {
       $("mainNav").classList.remove("open");
-      $("menuToggle").setAttribute("aria-expanded","false");
+      $("menuToggle").setAttribute("aria-expanded", "false");
     }
   });
-  // Exibe a demonstração até que a equipe configure a conexão real com o banco.
+
+  // Primeiro mostra os eventos demonstrativos e depois tenta carregar os reais.
   renderFeatured();
   renderAgenda();
   renderGallery();
+
+  loadEventsFromSupabase();
 })();
